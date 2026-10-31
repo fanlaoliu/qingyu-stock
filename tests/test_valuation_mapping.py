@@ -108,6 +108,24 @@ class ValuationMappingTests(unittest.TestCase):
         self.assertIn('stocks[c]["market"] == market', source)
         self.assertIn('stocks[c]["industry"] = group', source)
 
+    def test_company_source_diagnostics_reports_classified_rows(self):
+        rows = [
+            {"公司代號": "2330", "產業別": "24"},
+            {"公司代號": "2317", "產業別": ""},
+            {"unknown": "value"},
+        ]
+        result = module.company_source_diagnostics(rows)
+        self.assertEqual(result["rows"], 3)
+        self.assertEqual(result["rows_with_code"], 2)
+        self.assertEqual(result["rows_with_industry"], 1)
+        self.assertIn("產業別", result["columns"])
+
+    def test_company_source_diagnostics_empty(self):
+        self.assertEqual(module.company_source_diagnostics([]), {
+            "rows": 0, "rows_with_code": 0,
+            "rows_with_industry": 0, "columns": [],
+        })
+
     def test_equity_regex_matches_real_four_digit_codes(self):
         import re
         source = SCRIPT.read_text(encoding="utf-8")
