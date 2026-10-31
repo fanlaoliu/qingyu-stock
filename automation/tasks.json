@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "policy": {
+    "max_parallel_tasks": 1,
+    "require_tests": true,
+    "require_pr": true,
+    "auto_merge": false,
+    "production_deploy_requires_verified_ci": true
+  },
+  "tasks": [
+    {
+      "id": "valuation-coverage",
+      "title": "Improve official PE/PB source mapping and coverage tests",
+      "priority": 1,
+      "risk": "low",
+      "status": "todo"
+    },
+    {
+      "id": "snapshot-regression",
+      "title": "Add regression tests for snapshot freshness and incomplete sources",
+      "priority": 2,
+      "risk": "low",
+      "status": "todo"
+    },
+    {
+      "id": "mobile-usability",
+      "title": "Improve mobile stock table accessibility and navigation",
+      "priority": 3,
+      "risk": "low",
+      "status": "todo"
+    }
+  ]
+}
