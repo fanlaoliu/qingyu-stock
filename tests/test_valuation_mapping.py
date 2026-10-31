@@ -46,6 +46,34 @@ class ValuationMappingTests(unittest.TestCase):
         self.assertIn('                merge_valuation(s, row)', block)
         self.assertNotIn('\\\\n                s.update', block)
 
+    def test_valuation_coverage_accepts_sufficient_official_metrics(self):
+        stocks = {
+            str(i): {"market": "上市", "price": 10, "pe": 15 if i < 3 else None, "pb": None}
+            for i in range(10)
+        }
+        stocks.update({
+            "o" + str(i): {"market": "上櫃", "price": 20, "pe": None,
+                           "pb": 2 if i < 2 else None}
+            for i in range(10)
+        })
+        module.validate_valuation_coverage(stocks, {
+            "twse_valuation": [{}], "tpex_valuation": [{}]
+        })
+
+    def test_valuation_coverage_rejects_empty_metrics(self):
+        stocks = {
+            "a": {"market": "上市", "price": 10, "pe": None, "pb": None},
+            "b": {"market": "上櫃", "price": 20, "pe": 10, "pb": None},
+        }
+        with self.assertRaisesRegex(RuntimeError, "上市 valuation coverage"):
+            module.validate_valuation_coverage(stocks, {
+                "twse_valuation": [{}], "tpex_valuation": [{}]
+            })
+
+    def test_valuation_coverage_rejects_missing_feed(self):
+        with self.assertRaisesRegex(RuntimeError, "feed missing"):
+            module.validate_valuation_coverage({}, {"twse_valuation": []})
+
     def test_numeric_rejects_nonfinite_and_invalid(self):
         for value in ("--", "除零", "N/A", "NaN", "Infinity"):
             self.assertIsNone(module.numeric(value))
