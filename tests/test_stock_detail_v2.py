@@ -21,6 +21,15 @@ class StockDetailV2Tests(unittest.TestCase):
         self.assertIn("industryPeers?sameIndustry:stocks.filter", HTML)
         self.assertIn("industryPeers?'同產業':'同市場'", HTML)
 
+    def test_industry_is_preserved_when_loading_json(self):
+        self.assertIn("industry:typeof x.industry==='string'?x.industry.trim():null", HTML)
+
+    def test_peer_median_and_gap_are_shown(self):
+        self.assertIn("sort((a,b)=>a-b)", HTML)
+        self.assertIn("中位數 ", HTML)
+        self.assertIn("median!==0", HTML)
+        self.assertIn("差距 ", HTML)
+
     def test_missing_metrics_are_not_ranked(self):
         self.assertIn("num(stock[key])===null", HTML)
         self.assertIn("缺少有效資料", HTML)
