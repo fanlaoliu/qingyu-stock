@@ -15,6 +15,12 @@ class StockDetailV2Tests(unittest.TestCase):
         self.assertIn("x.market===stock.market", HTML)
         self.assertIn("peers.length<10", HTML)
 
+    def test_industry_comparison_requires_sufficient_peers(self):
+        self.assertIn("x.industry===stock.industry", HTML)
+        self.assertIn("sameIndustry.length>=10", HTML)
+        self.assertIn("industryPeers?sameIndustry:stocks.filter", HTML)
+        self.assertIn("industryPeers?'同產業':'同市場'", HTML)
+
     def test_missing_metrics_are_not_ranked(self):
         self.assertIn("num(stock[key])===null", HTML)
         self.assertIn("缺少有效資料", HTML)
