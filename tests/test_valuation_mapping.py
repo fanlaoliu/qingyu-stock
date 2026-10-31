@@ -130,8 +130,8 @@ class ValuationMappingTests(unittest.TestCase):
         import re
         source = SCRIPT.read_text(encoding="utf-8")
         self.assertIn('re.fullmatch(r"\\d{4}", s["code"])', source)
-        self.assertTrue(re.fullmatch(r"\\d{4}", "2330"))
-        self.assertIsNone(re.fullmatch(r"\\d{4}", "0050A"))
+        self.assertTrue(re.fullmatch(r"\d{4}", "2330"))
+        self.assertIsNone(re.fullmatch(r"\d{4}", "0050A"))
 
     def test_industry_coverage_rejects_missing_company_feed(self):
         with self.assertRaisesRegex(RuntimeError, "company master feed missing"):
