@@ -66,6 +66,26 @@ def merge_valuation(stock, row):
     stock.update({key: val for key, val in valuation(row).items() if val is not None})
 
 
+def validate_valuation_coverage(stocks, results):
+    """Reject suspiciously empty valuation feeds rather than publishing lost metrics."""
+    if "twse_valuation" not in results or "tpex_valuation" not in results:
+        raise RuntimeError("Official valuation feed missing; previous snapshot preserved")
+    for market, source, min_ratio in (
+        ("上市", "twse_valuation", 0.20),
+        ("上櫃", "tpex_valuation", 0.10),
+    ):
+        rows = [s for s in stocks.values() if s["market"] == market and s["price"] is not None]
+        if not rows:
+            raise RuntimeError(f"No priced securities for {market}")
+        matched = sum(s["pe"] is not None or s["pb"] is not None for s in rows)
+        coverage = matched / len(rows)
+        if coverage < min_ratio:
+            raise RuntimeError(
+                f"{market} valuation coverage {coverage:.1%} below {min_ratio:.0%}; "
+                f"source={source} rows={len(results[source])}; previous snapshot preserved"
+            )
+
+
 def main():
     results = {}
     errors = {}
@@ -105,6 +125,7 @@ def main():
     counts = {m: sum(s["market"] == m and s["price"] is not None for s in stocks.values()) for m in ("上市", "上櫃")}
     if counts["上市"] < 700 or counts["上櫃"] < 500:
         raise RuntimeError(f"Unexpected market coverage: {counts}. Previous file preserved.")
+    validate_valuation_coverage(stocks, results)
     available_dates = [s["date"] for s in stocks.values() if s["date"]]
     if not available_dates:
         raise RuntimeError("Missing official trade date; previous file preserved.")
