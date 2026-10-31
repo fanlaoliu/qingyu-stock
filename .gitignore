@@ -4,3 +4,5 @@ __pycache__/
 xcuserdata/
 DerivedData/
 *.xcuserstate
+dist/
+.qingyu-build-*/

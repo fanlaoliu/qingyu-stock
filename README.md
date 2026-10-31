@@ -46,3 +46,7 @@ Node 22或以上；以 HTTP 開啟根目錄。GitHub Quality gate 包含 Python�
 ### 熱力圖研究優先度
 
 熱力圖預設依研究優先度降冪，再按代號穩定排序；缺必要資料的個股另列最後，不賦予0分。100分自訂規則為成長30／估值30／歷史股息15／當日法人25，詳見頁面「研究優先度怎麼排？」。未回測，未涵蓋ROE、EPS、現金流、負債、人氣或技術面，不等同完整50／25／15／10框架或報酬預測。色塊保留所選原始指標顏色，另顯示分數與順序；鍵盤聚焦或移到色塊可見明細。所有既有熱力圖範圍、行業排除及期間控制繼續生效。籌碼非同步載入完成後，會重新計算排序。
+
+### Cloudflare 正式部署
+
+`wrangler.jsonc` 綁定既有 `qingyu-stock` Worker。Wrangler 執行 `python3 scripts/build_static.py` 產生 `dist/`，只包含明確允許的網站資產、官方快照、快取標頭與雜湊清單 `deployment.json`。原始碼、iOS 專案、測試、工作流程及其他儲存庫檔案不會打包上站。使用既有 Workers Builds 的部署命令 `npx wrangler deploy`；分支預覽可用 `npx wrangler versions upload`。不需要將整個儲存庫根目錄設定為公開資產目錄。
