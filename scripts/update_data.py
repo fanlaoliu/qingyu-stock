@@ -61,6 +61,11 @@ def valuation(row):
         "yield_": numeric(value(row, "DividendYield", "DividendYieldRatio", "Yield", "YieldRatio", "CashDividendYield", "殖利率(%)", "殖利率", "殖利率(％)", "殖利率（%）")),
     }
 
+def merge_valuation(stock, row):
+    """Only replace metrics when the new source supplies an actual numeric value."""
+    stock.update({key: val for key, val in valuation(row).items() if val is not None})
+
+
 def main():
     results = {}
     errors = {}
