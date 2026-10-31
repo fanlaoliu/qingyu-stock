@@ -3,7 +3,7 @@
  const el=id=>document.getElementById(id);
  const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
  function updateStatus(){
-  el('appMode').textContent=standalone()?'主畫面 App 模式':'瀏覽器模式';
+  el('appMode').textContent=/Qingyu-iOS\//.test(navigator.userAgent)?'iOS App 模式':standalone()?'主畫面 App 模式':'瀏覽器模式';
   el('appConnection').textContent=navigator.onLine?'裝置顯示連線中；行情是否成功請看來源狀態。':'裝置目前離線，無法更新行情或重新驗證登入。';
   el('connectionBanner').hidden=navigator.onLine;
  }

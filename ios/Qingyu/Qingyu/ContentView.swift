@@ -66,6 +66,7 @@ final class ResearchBrowser: NSObject, ObservableObject, WKNavigationDelegate, W
         appURL = candidate?.scheme == "https" && candidate?.host != nil && candidate?.user == nil && candidate?.password == nil ? candidate : nil
         let config = WKWebViewConfiguration()
         config.websiteDataStore = .default()
+        config.applicationNameForUserAgent = "Qingyu-iOS/1.0"
         webView = WKWebView(frame: .zero, configuration: config)
         super.init()
         webView.navigationDelegate = self

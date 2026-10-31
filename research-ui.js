@@ -3,7 +3,6 @@
  const R=globalThis.QingyuResearch,$r=id=>document.getElementById(id);
  const metricValue=(r,key)=>R.finite(r[key])?r[key]:null;
  const formatted=(v,key)=>v===null?'—':(key==='yoy'&&v>0?'+':'')+display(v)+(R.metrics[key]?.unit||'');
- const baseControls={market:'all',maxpe:'',maxpb:'',minyield:'',minyoy:'',sort:'code',complete:false};
  function syncExclusions(){
   const names=[...excludedIndustries].map(R.industryLabel);
   document.querySelectorAll('[data-excluded-industry]').forEach(input=>{input.checked=excludedIndustries.has(input.dataset.excludedIndustry);});
