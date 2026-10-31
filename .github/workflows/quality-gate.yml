@@ -1,0 +1,41 @@
+name: Quality gate
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Compile Python
+        run: python -m compileall -q scripts tests
+      - name: Run unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Validate committed snapshot if present
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path("data/stocks.json")
+          if not p.exists():
+              print("No committed snapshot; skip validation")
+          else:
+              payload = json.loads(p.read_text(encoding="utf-8"))
+              assert isinstance(payload, dict), "snapshot must be object"
+              assert isinstance(payload.get("meta"), dict), "missing meta"
+              stocks = payload.get("stocks")
+              assert isinstance(stocks, list) and stocks, "empty or missing stocks"
+              assert all(isinstance(s, dict) and s.get("code") and s.get("market") for s in stocks), "invalid stock row"
+              print(f"Validated {len(stocks)} rows")
+          PY
