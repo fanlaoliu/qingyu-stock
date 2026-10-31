@@ -108,6 +108,33 @@ class ValuationMappingTests(unittest.TestCase):
         self.assertIn('stocks[c]["market"] == market', source)
         self.assertIn('stocks[c]["industry"] = group', source)
 
+    def test_industry_coverage_rejects_missing_company_feed(self):
+        with self.assertRaisesRegex(RuntimeError, "company master feed missing"):
+            module.validate_industry_coverage({}, {"twse_company": []})
+
+    def test_industry_coverage_accepts_classified_equities(self):
+        stocks = {}
+        for market, prefix in (("上市", "1"), ("上櫃", "6")):
+            for i in range(350):
+                c = prefix + f"{i:03d}"
+                stocks[c] = {"code": c, "market": market,
+                             "industry": "半導體" if i < 280 else None}
+        module.validate_industry_coverage(stocks, {
+            "twse_company": [{"公司代號": "1101"}],
+            "tpex_company": [{"公司代號": "6101"}],
+        })
+
+    def test_industry_coverage_rejects_unclassified_equities(self):
+        stocks = {}
+        for market, prefix in (("上市", "1"), ("上櫃", "6")):
+            for i in range(350):
+                c = prefix + f"{i:03d}"
+                stocks[c] = {"code": c, "market": market, "industry": None}
+        with self.assertRaisesRegex(RuntimeError, "industry coverage"):
+            module.validate_industry_coverage(stocks, {
+                "twse_company": [{}], "tpex_company": [{}],
+            })
+
     def test_numeric_rejects_nonfinite_and_invalid(self):
         for value in ("--", "除零", "N/A", "NaN", "Infinity"):
             self.assertIsNone(module.numeric(value))
