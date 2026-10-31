@@ -1,0 +1,29 @@
+name: AI PR checks
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Python unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Check data snapshot when present
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          p=pathlib.Path('data/stocks.json')
+          if p.exists():
+              with p.open(encoding='utf-8') as f: json.load(f)
+              print('Snapshot JSON valid')
+          else:
+              print('No snapshot committed; skipping')
+          PY
