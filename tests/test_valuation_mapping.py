@@ -36,6 +36,16 @@ class ValuationMappingTests(unittest.TestCase):
         module.merge_valuation(stock, {"PEratio": "15.6", "PBratio": "—"})
         self.assertEqual(stock, {"pe": 15.6, "pb": 1.4, "yield_": 3.1})
 
+    def test_main_calls_valuation_merge_for_official_rows(self):
+        # Guard against a source-edit regression where the call was swallowed
+        # by a comment, silently leaving all valuation fields empty.
+        source = SCRIPT.read_text(encoding="utf-8")
+        start = source.index('    for source in ("twse_valuation", "tpex_valuation"):')
+        end = source.index('    for row in results.get("twse_revenue"', start)
+        block = source[start:end]
+        self.assertIn('                merge_valuation(s, row)', block)
+        self.assertNotIn('\\\\n                s.update', block)
+
     def test_numeric_rejects_nonfinite_and_invalid(self):
         for value in ("--", "除零", "N/A", "NaN", "Infinity"):
             self.assertIsNone(module.numeric(value))
