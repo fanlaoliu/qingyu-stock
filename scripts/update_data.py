@@ -12,9 +12,11 @@ URLS = {
     "twse_price": "https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL",
     "twse_valuation": "https://openapi.twse.com.tw/v1/exchangeReport/BWIBBU_ALL",
     "twse_revenue": "https://openapi.twse.com.tw/v1/opendata/t187ap05_L",
+    "twse_company": "https://openapi.twse.com.tw/v1/opendata/t187ap03_L",
     "tpex_price": "https://www.tpex.org.tw/openapi/v1/tpex_mainboard_quotes",
     "tpex_valuation": "https://www.tpex.org.tw/openapi/v1/tpex_mainboard_peratio_analysis",
     "tpex_revenue": "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap05_O",
+    "tpex_company": "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap03_O",
 }
 
 def fetch(url):
@@ -63,7 +65,7 @@ def valuation(row):
 
 def industry(row):
     """Use only an explicitly supplied official industry field."""
-    return value(row, "產業別", "產業類別", "Industry", "IndustryName") or None
+    return value(row, "產業別", "產業類別", "Industry", "IndustryName", "SecuritiesIndustryCode") or None
 
 
 def valuation_source_diagnostics(rows):
@@ -138,6 +140,18 @@ def main():
             group = industry(row)
             if group:
                 stocks[c]["industry"] = group
+    # Company master data carries official industry codes, unlike many revenue feeds.
+    for source, market in (("twse_company", "上市"), ("tpex_company", "上櫃")):
+        for row in results.get(source, []):
+            c = code(row)
+            if c in stocks and stocks[c]["market"] == market:
+                group = industry(row)
+                if group:
+                    stocks[c]["industry"] = group
+    for market in ("上市", "上櫃"):
+        market_rows = [s for s in stocks.values() if s["market"] == market]
+        classified = sum(bool(s.get("industry")) for s in market_rows)
+        print("Industry coverage", market, classified, "/", len(market_rows))
     # Never publish an incomplete or stale market snapshot as official.
     if "twse_price" not in results or "tpex_price" not in results:
         raise RuntimeError("Incomplete market fetch; preserving previous data: " + json.dumps(errors, ensure_ascii=False))
