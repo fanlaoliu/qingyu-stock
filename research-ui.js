@@ -54,9 +54,12 @@
   const revenueAge=(now-Date.parse(r.revenueMonth+'-01T00:00:00+08:00'))/86400000;
   return revenueAge>=0&&revenueAge<=100;
  }
+ let heatEvaluations=new Map();
+ const evaluatePriority=r=>QingyuPriority.evaluate(r,globalThis.analyzeChipStock?.(r));
  function inspect(r,key){
-  const m=R.metrics[key],period=r[m.period];
+  const m=R.metrics[key],period=r[m.period],e=heatEvaluations.get(r.code)||evaluatePriority(r);
   $r('heatInspector').innerHTML='<strong>'+esc(r.code+' '+r.name)+'</strong><span>'+esc(m.label)+' '+formatted(metricValue(r,key),key)+'</span><small>'+esc(r.market)+' · '+esc(r.industry?'官方產業 '+r.industry:'未分類')+' · 指標期間 '+esc(period||'未提供')+' · 行情 '+esc(r.date||'未提供')+'<br>'+esc(key==='yoy'?r.revenueOrigin||'來源未提供':r.valuationOrigin||'來源未提供')+' · 點擊或按 Enter 開啟完整研究卡</small>';
+  const score=document.createElement('p');score.className='priority-explanation';score.textContent='研究優先度：'+(e.score===null?'資料待補（不評分）':e.score+'/100 · '+e.band)+'｜'+e.parts.map(p=>p.label+' '+(p.value===null?'—':p.value)+'/'+p.max).join(' · ')+(e.missing.length?'｜'+e.missing.join('；'):'')+'｜籌碼日期 '+(e.chipDate||'未提供');$r('heatInspector').append(score);
  }
  function drawHeatmap(){
   const key=$r('heatMetric').value,m=R.metrics[key],market=$r('heatMarket').value,industry=$r('heatIndustry').value,q=$r('heatSearch').value.trim().toLowerCase(),scope=$r('heatScope').value;
@@ -64,13 +67,15 @@
   const original=rows.length,unknown=rows.filter(r=>!periodKnown(r,key)).length;
   if($r('heatKnownPeriods').checked)rows=rows.filter(r=>periodKnown(r,key));
   const sort=$r('heatSort').value;
-  rows.sort((a,b)=>{if(sort==='code')return a.code.localeCompare(b.code);const av=metricValue(a,key),bv=metricValue(b,key);return av===null?(bv===null?a.code.localeCompare(b.code):1):bv===null?-1:(sort==='asc'?av-bv:bv-av)||a.code.localeCompare(b.code);});
+  const ranked=QingyuPriority.rank(rows,r=>globalThis.analyzeChipStock?.(r));heatEvaluations=new Map(ranked.map(x=>[x.stock.code,x.evaluation]));
+  if(sort==='priority')rows=ranked.map(x=>x.stock);else rows.sort((a,b)=>{if(sort==='code')return a.code.localeCompare(b.code);const av=metricValue(a,key),bv=metricValue(b,key);return av===null?(bv===null?a.code.localeCompare(b.code):1):bv===null?-1:(sort==='asc'?av-bv:bv-av)||a.code.localeCompare(b.code);});
   const available=rows.filter(r=>metricValue(r,key)!==null).length,limit=$r('heatLimit').value==='all'?rows.length:Number($r('heatLimit').value),shown=rows.slice(0,limit);
   const periods=[...new Set(rows.map(r=>r[m.period]||'未提供'))].sort();
-  $r('heatCaption').textContent='顯示 '+shown.length+' / '+rows.length+' 檔｜行業排除 '+excludedIndustries.size+' 類｜本範圍有指標 '+available+' 檔、缺值 '+(rows.length-available)+' 檔｜'+($r('heatKnownPeriods').checked?'已排除期間未核對或過舊 '+unknown+' / '+original+' 檔':'包含期間未核對或過舊 '+unknown+' 檔')+'｜指標期間 '+(periods.length>4?periods.slice(0,4).join('、')+'等 '+periods.length+' 個期間':periods.join('、')||'—');
+  const rankedCount=ranked.filter(x=>x.evaluation.score!==null).length;
+  $r('heatCaption').textContent=(sort==='priority'?'研究優先度高→低（同分按代號）｜可評分 '+rankedCount+' 檔、資料待補 '+(rows.length-rankedCount)+' 檔（另列最後）｜':'')+'顯示 '+shown.length+' / '+rows.length+' 檔｜行業排除 '+excludedIndustries.size+' 類｜本範圍有指標 '+available+' 檔、缺值 '+(rows.length-available)+' 檔｜'+($r('heatKnownPeriods').checked?'已排除期間未核對或過舊 '+unknown+' / '+original+' 檔':'包含期間未核對或過舊 '+unknown+' 檔')+'｜指標期間 '+(periods.length>4?periods.slice(0,4).join('、')+'等 '+periods.length+' 個期間':periods.join('、')||'—');
   $r('heatLegend').innerHTML='<span>'+esc(m.label)+'</span><div class="heat-scale '+(key==='yoy'?'diverging':'sequential')+'" aria-hidden="true"></div><div class="legend-labels">'+m.legend.map(v=>'<span>'+esc(v)+'</span>').join('')+'</div><small>灰色斜線＝缺值；色塊等面積，不代表市值。'+esc(m.note)+'</small>';
-  $r('heatGrid').innerHTML=shown.map(r=>{const v=metricValue(r,key),period=r[m.period]||'未提供';return '<button type="button" class="heat-tile '+(v===null?'missing':'')+' '+(!periodKnown(r,key)?'period-unknown':'')+'" data-heat-code="'+esc(r.code)+'" style="background-color:'+R.color(key,v)+'" aria-label="'+esc(r.code+' '+r.name+' '+m.label+' '+formatted(v,key)+' 期間 '+period)+'"><span class="tile-code">'+esc(r.code)+'</span><strong>'+esc(r.name)+'</strong><b>'+formatted(v,key)+'</b><small>'+esc(period)+'</small></button>';}).join('')||'<p class="heat-empty">沒有符合條件的股票。請調整範圍、產業或期間條件。</p>';
-  $r('heatInspector').innerHTML=shown.length?'移到色塊或以鍵盤聚焦，可查看數值、日期與來源；點擊開啟研究卡。':'目前範圍沒有可顯示的股票。';
+  $r('heatGrid').innerHTML=shown.map((r,i)=>{const v=metricValue(r,key),period=r[m.period]||'未提供',e=heatEvaluations.get(r.code),priority=(sort==='priority'&&e.score!==null?'#'+(i+1)+' ':'')+(e.score===null?'資料待補':e.band+' '+e.score+'/100');return '<button type="button" class="heat-tile '+(v===null?'missing':'')+' '+(!periodKnown(r,key)?'period-unknown':'')+'" data-heat-code="'+esc(r.code)+'" style="background-color:'+R.color(key,v)+'" aria-label="'+esc(r.code+' '+r.name+' '+priority+' '+m.label+' '+formatted(v,key)+' 期間 '+period)+'"><span class="tile-priority">'+esc(priority)+'</span><span class="tile-code">'+esc(r.code)+'</span><strong>'+esc(r.name)+'</strong><b>'+formatted(v,key)+'</b><small>'+esc(period)+'</small></button>';}).join('')||'<p class="heat-empty">沒有符合條件的股票。請調整範圍、產業或期間條件。</p>';
+  $r('heatInspector').innerHTML=shown.length?'移到色塊或以鍵盤聚焦，可查看研究分數、各項得分、缺漏原因、日期與來源；點擊開啟研究卡。':'目前範圍沒有可顯示的股票。';
  }
  heatControls.forEach(id=>$r(id).addEventListener(id==='heatSearch'?'input':'change',drawHeatmap));
  for(const event of ['pointerover','focusin'])$r('heatGrid').addEventListener(event,e=>{const b=e.target.closest('[data-heat-code]');if(!b)return;const r=stocks.find(s=>s.code===b.dataset.heatCode);if(r)inspect(r,$r('heatMetric').value);});

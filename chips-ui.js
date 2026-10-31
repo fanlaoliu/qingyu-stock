@@ -4,6 +4,7 @@
  let payload=null,loading=false,failure='',limit=50;
  const fmt=v=>typeof v==='number'&&Number.isFinite(v)?(v>0?'+':'')+(v/1000).toLocaleString('zh-TW',{maximumFractionDigits:3}):'—';
  const labels={foreign:'外資（不含外資自營商）',trust:'投信',dealer:'自營商',total:'三大法人合計'};
+ globalThis.analyzeChipStock=stock=>C.analyze(payload,stock);
  globalThis.matchesChipFilter=stock=>C.matches(payload,stock,el('chipFilter').value);
  function detail(stock){
   const a=C.analyze(payload,stock);const box=el('detailChips');box.replaceChildren();
