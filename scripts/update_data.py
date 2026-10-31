@@ -85,8 +85,19 @@ def main():
             yoy = numeric(value(row, "營業收入-去年同月增減(%)", "營業收入-去年同月增減（%）", "去年同月增減(%)"))
             if yoy is not None:
                 stocks[c]["yoy"] = yoy
-    if not stocks:
-        raise RuntimeError("No official price records; prior file preserved: " + json.dumps(errors, ensure_ascii=False))
+    # Never publish an incomplete or stale market snapshot as official.
+    if "twse_price" not in results or "tpex_price" not in results:
+        raise RuntimeError("Incomplete market fetch; preserving previous data: " + json.dumps(errors, ensure_ascii=False))
+    counts = {m: sum(s["market"] == m and s["price"] is not None for s in stocks.values()) for m in ("上市", "上櫃")}
+    if counts["上市"] < 700 or counts["上櫃"] < 500:
+        raise RuntimeError(f"Unexpected market coverage: {counts}. Previous file preserved.")
+    available_dates = [s["date"] for s in stocks.values() if s["date"]]
+    if not available_dates:
+        raise RuntimeError("Missing official trade date; previous file preserved.")
+    latest = dt.date.fromisoformat(max(available_dates))
+    today = dt.datetime.now(dt.timezone(dt.timedelta(hours=8))).date()
+    if latest > today or (today - latest).days > 14:
+        raise RuntimeError(f"Stale or future snapshot: {latest}. Previous file preserved.")
     clean = [{"code":s["code"], "name":s["name"], "market":s["market"], "price":s["price"], "pe":s["pe"], "pb":s["pb"], "yield":s["yield_"], "yoy":s["yoy"], "date":s["date"]} for s in stocks.values()]
     dates = [s["date"] for s in clean if s["date"]]
     now = dt.datetime.now(dt.timezone(dt.timedelta(hours=8)))
