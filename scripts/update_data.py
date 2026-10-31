@@ -89,7 +89,7 @@ def validate_industry_coverage(stocks, results):
             raise RuntimeError(f"{market} company master feed missing: {source}; previous snapshot preserved")
         # Exclude ETFs and other non-four-digit instruments from the denominator.
         equities = [s for s in stocks.values()
-                    if s["market"] == market and re.fullmatch(r"\\d{4}", s["code"])]
+                    if s["market"] == market and re.fullmatch(r"\d{4}", s["code"])]
         if len(equities) < 300:
             raise RuntimeError(f"{market} insufficient equity sample for industry validation")
         covered = sum(bool(s.get("industry")) for s in equities)
