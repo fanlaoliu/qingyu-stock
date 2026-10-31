@@ -93,6 +93,21 @@ class ValuationMappingTests(unittest.TestCase):
             "rows_with_valuation": 0, "columns": [],
         })
 
+    def test_official_company_master_industry_codes(self):
+        self.assertEqual(module.industry({"產業別": "24"}), "24")
+        self.assertEqual(module.industry({"SecuritiesIndustryCode": "28"}), "28")
+        self.assertIsNone(module.industry({}))
+
+    def test_both_official_company_master_feeds_are_configured(self):
+        self.assertTrue(module.URLS["twse_company"].endswith("/t187ap03_L"))
+        self.assertTrue(module.URLS["tpex_company"].endswith("/mopsfin_t187ap03_O"))
+
+    def test_company_master_join_is_market_scoped(self):
+        source = SCRIPT.read_text(encoding="utf-8")
+        self.assertIn('for source, market in (("twse_company", "上市"), ("tpex_company", "上櫃")):', source)
+        self.assertIn('stocks[c]["market"] == market', source)
+        self.assertIn('stocks[c]["industry"] = group', source)
+
     def test_numeric_rejects_nonfinite_and_invalid(self):
         for value in ("--", "除零", "N/A", "NaN", "Infinity"):
             self.assertIsNone(module.numeric(value))
