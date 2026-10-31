@@ -22,7 +22,7 @@
    const data=QingyuAppData.exportData(localStorage),blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
    if(blob.size>QingyuAppData.maxBytes)throw Error('備份超過10MB，請先整理筆記。');
    const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='qingyu-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);
-   status('已產生備份檔。請將檔案保存到「檔案」App；匯入前請妥善保管，其中可能包含你的研究筆記。');
+   status('已產生未加密的明文備份檔。請將檔案保存到「檔案」App；匯入前請妥善保管，其中可能包含你的研究筆記。');
   }catch(e){status('無法匯出：'+e.message);}
  });
  el('importAppFile').addEventListener('change',async event=>{
@@ -31,7 +31,7 @@
   try{
    if(file.size>QingyuAppData.maxBytes)throw Error('檔案超過10MB。');
    pending=QingyuAppData.normalize(JSON.parse(await file.text()));
-   status('已讀取備份：'+pending.favorites.length+' 檔自選、'+Object.keys(pending.notes).length+' 筆筆記、'+pending.excludedIndustries.length+' 類排除。按「匯入並合併」後才會寫入；同代號既有筆記與既有儲存篩選會保留。');el('confirmAppImport').disabled=false;
+   status('已讀取明文備份：'+pending.favorites.length+' 檔自選、'+Object.keys(pending.notes).length+' 筆筆記、'+pending.excludedIndustries.length+' 類排除。按「匯入並合併」後才會寫入；同代號既有筆記與既有儲存篩選會保留。');el('confirmAppImport').disabled=false;
   }catch(e){status('無法讀取備份：'+e.message);}
  });
  el('confirmAppImport').addEventListener('click',()=>{

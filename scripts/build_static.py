@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """Build an allowlisted static Worker bundle without shipping repository internals."""
+import base64
+import re
 import hashlib
 import json
 from pathlib import Path
@@ -33,7 +35,18 @@ def build(root=ROOT):
             shutil.copyfile(source, target)
             manifest[name] = hashlib.sha256(target.read_bytes()).hexdigest()
         (stage / 'deployment.json').write_text(json.dumps({'app': 'qingyu-stock', 'assets': manifest}, sort_keys=True))
-        (stage / '_headers').write_text('/\n  Cache-Control: no-cache\n/*.js\n  Cache-Control: no-cache\n/*.css\n  Cache-Control: no-cache\n/data/*\n  Cache-Control: no-store\n/deployment.json\n  Cache-Control: no-store\n/sw.js\n  Cache-Control: no-cache\n  Service-Worker-Allowed: /\n')
+        html = (stage / 'index.html').read_text(encoding='utf-8')
+        hashes = ["'sha256-" + base64.b64encode(hashlib.sha256(code.encode('utf-8')).digest()).decode('ascii') + "'"
+                  for code in re.findall(r'<script(?:\s[^>]*)?>([\s\S]*?)</script>', html) if code.strip()]
+        csp = ("default-src 'self'; script-src 'self' " + ' '.join(hashes)
+               + "; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; "
+                 "worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; "
+                 "frame-ancestors 'none'; form-action 'none'")
+        security = ('/*\n  Content-Security-Policy: ' + csp
+                    + '\n  X-Content-Type-Options: nosniff\n  X-Frame-Options: DENY'
+                    + '\n  Referrer-Policy: no-referrer'
+                    + '\n  Permissions-Policy: camera=(), microphone=(), geolocation=()\n')
+        (stage / '_headers').write_text(security + '/\n  Cache-Control: no-cache\n/*.js\n  Cache-Control: no-cache\n/*.css\n  Cache-Control: no-cache\n/data/*\n  Cache-Control: no-store\n/deployment.json\n  Cache-Control: no-store\n/sw.js\n  Cache-Control: no-cache\n  Service-Worker-Allowed: /\n')
         if out.exists():
             shutil.rmtree(out)
         shutil.copytree(stage, out)

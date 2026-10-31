@@ -95,12 +95,28 @@ final class ResearchBrowser: NSObject, ObservableObject, WKNavigationDelegate, W
     }
     func back() { if webView.canGoBack { webView.goBack() } }
 
+    private func trustedOrigin(_ url: URL) -> Bool {
+        guard let base = appURL else { return false }
+        return url.scheme?.lowercased() == "https"
+            && url.host?.lowercased() == base.host?.lowercased()
+            && (url.port ?? 443) == (base.port ?? 443)
+            && url.user == nil && url.password == nil
+    }
+
+    private func trustedDownload(_ url: URL) -> Bool {
+        if url.scheme == "blob" {
+            guard let origin = URL(string: String(url.absoluteString.dropFirst(5))) else { return false }
+            return trustedOrigin(origin)
+        }
+        return trustedOrigin(url)
+    }
+
     func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
         guard let url = action.request.url else { decisionHandler(.cancel); return }
-        if action.shouldPerformDownload && (url.scheme == "blob" || url.host == appURL?.host) {
+        if action.shouldPerformDownload && trustedDownload(url) {
             decisionHandler(.download); return
         }
-        if url.scheme == "https", url.host == appURL?.host, url.port == appURL?.port {
+        if trustedOrigin(url) {
             decisionHandler(.allow); return
         }
         // Research-source links open in Safari. Never allow arbitrary schemes in the WebView.
@@ -123,6 +139,7 @@ final class ResearchBrowser: NSObject, ObservableObject, WKNavigationDelegate, W
     func webView(_ webView: WKWebView, navigationAction: WKNavigationAction, didBecome download: WKDownload) { download.delegate = self }
     func webView(_ webView: WKWebView, navigationResponse: WKNavigationResponse, didBecome download: WKDownload) { download.delegate = self }
     func download(_ download: WKDownload, decideDestinationUsing response: URLResponse, suggestedFilename: String, completionHandler: @escaping (URL?) -> Void) {
+        guard let source = response.url, trustedDownload(source) else { completionHandler(nil); return }
         let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
         do {
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)

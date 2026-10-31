@@ -23,6 +23,25 @@ class StaticBuildTests(unittest.TestCase):
             self.assertEqual(result['index.html'],hashlib.sha256((root/'index.html').read_bytes()).hexdigest())
             self.assertEqual(json.loads((root/'dist/deployment.json').read_text())['assets'],result)
             self.assertIn('Cache-Control: no-store',(root/'dist/_headers').read_text())
+    def test_security_headers_authorize_exact_inline_scripts(self):
+        import base64
+        import re
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder)
+            for name in B.ASSETS:
+                path=root/name;path.parent.mkdir(parents=True,exist_ok=True);path.write_text('asset')
+            code="console.log('allowed')"
+            (root/'index.html').write_text('<script>'+code+'</script>')
+            B.build(root)
+            headers=(root/'dist/_headers').read_text()
+            digest=base64.b64encode(hashlib.sha256(code.encode()).digest()).decode()
+            self.assertIn("'sha256-"+digest+"'",headers)
+            scripts=headers.split('script-src ',1)[1].split(';',1)[0]
+            self.assertNotIn('unsafe-inline',scripts)
+            self.assertNotIn('unsafe-eval',scripts)
+            for directive in ["frame-ancestors 'none'", "object-src 'none'", 'X-Content-Type-Options: nosniff', 'Referrer-Policy: no-referrer']:
+                self.assertIn(directive,headers)
+
     def test_missing_asset_preserves_previous_bundle(self):
         with tempfile.TemporaryDirectory() as folder:
             root=Path(folder);(root/'dist').mkdir();(root/'dist'/'index.html').write_text('previous')
