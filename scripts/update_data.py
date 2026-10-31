@@ -82,6 +82,26 @@ def merge_valuation(stock, row):
     stock.update({key: val for key, val in valuation(row).items() if val is not None})
 
 
+def validate_industry_coverage(stocks, results):
+    """Fail closed when company-master feeds cannot classify ordinary equities."""
+    for market, source in (("上市", "twse_company"), ("上櫃", "tpex_company")):
+        if source not in results or not results[source]:
+            raise RuntimeError(f"{market} company master feed missing: {source}; previous snapshot preserved")
+        # Exclude ETFs and other non-four-digit instruments from the denominator.
+        equities = [s for s in stocks.values()
+                    if s["market"] == market and re.fullmatch(r"\\d{4}", s["code"])]
+        if len(equities) < 300:
+            raise RuntimeError(f"{market} insufficient equity sample for industry validation")
+        covered = sum(bool(s.get("industry")) for s in equities)
+        ratio = covered / len(equities)
+        print("Equity industry coverage", market, covered, "/", len(equities), f"{ratio:.1%}")
+        if ratio < 0.50:
+            raise RuntimeError(
+                f"{market} industry coverage {ratio:.1%} below 50%; "
+                f"source={source}; previous snapshot preserved"
+            )
+
+
 def validate_valuation_coverage(stocks, results):
     """Reject suspiciously empty valuation feeds rather than publishing lost metrics."""
     if "twse_valuation" not in results or "tpex_valuation" not in results:
@@ -159,6 +179,7 @@ def main():
     if counts["上市"] < 700 or counts["上櫃"] < 500:
         raise RuntimeError(f"Unexpected market coverage: {counts}. Previous file preserved.")
     validate_valuation_coverage(stocks, results)
+    validate_industry_coverage(stocks, results)
     available_dates = [s["date"] for s in stocks.values() if s["date"]]
     if not available_dates:
         raise RuntimeError("Missing official trade date; previous file preserved.")
