@@ -60,6 +60,8 @@ def main():
         try:
             results[name] = fetch(url)
             print(name, len(results[name]))
+            if results[name] and name in ("tpex_valuation", "tpex_revenue"):
+                print(name, "columns:", list(results[name][0].keys()))
         except Exception as exc:
             errors[name] = str(exc)
             print("WARNING", name, exc)
@@ -99,6 +101,8 @@ def main():
     today = dt.datetime.now(dt.timezone(dt.timedelta(hours=8))).date()
     if latest > today or (today - latest).days > 14:
         raise RuntimeError(f"Stale or future snapshot: {latest}. Previous file preserved.")
+    for market in ("上市", "上櫃"):
+        print("Coverage", market, {key: sum(s["market"] == market and s[key] is not None for s in stocks.values()) for key in ("pe", "pb", "yield_", "yoy")})
     clean = [{"code":s["code"], "name":s["name"], "market":s["market"], "price":s["price"], "pe":s["pe"], "pb":s["pb"], "yield":s["yield_"], "yoy":s["yoy"], "date":s["date"]} for s in stocks.values()]
     dates = [s["date"] for s in clean if s["date"]]
     now = dt.datetime.now(dt.timezone(dt.timedelta(hours=8)))
