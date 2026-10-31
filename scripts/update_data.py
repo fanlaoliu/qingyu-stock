@@ -14,6 +14,7 @@ URLS = {
     "twse_revenue": "https://openapi.twse.com.tw/v1/opendata/t187ap05_L",
     "tpex_price": "https://www.tpex.org.tw/openapi/v1/tpex_mainboard_quotes",
     "tpex_valuation": "https://www.tpex.org.tw/openapi/v1/tpex_mainboard_peratio_analysis",
+    "tpex_revenue": "https://www.tpex.org.tw/openapi/v1/mopsfin_t187ap05_O",
 }
 
 def fetch(url):
@@ -78,11 +79,11 @@ def main():
                 s = stocks[c]
                 s["pe"] = numeric(value(row, "PEratio", "PERatio", "PriceEarningRatio", "P/E", "本益比"))
                 s["pb"] = numeric(value(row, "PBratio", "PBRatio", "PriceBookRatio", "P/B", "股價淨值比"))
-                s["yield_"] = numeric(value(row, "DividendYield", "DividendYieldRatio", "Yield", "殖利率(%)", "殖利率"))
-    for row in results.get("twse_revenue", []):
+                s["yield_"] = numeric(value(row, "DividendYield", "DividendYieldRatio", "Yield", "YieldRatio", "CashDividendYield", "殖利率(%)", "殖利率", "殖利率(％)"))
+    for row in results.get("twse_revenue", []) + results.get("tpex_revenue", []):
         c = code(row)
         if c in stocks:
-            yoy = numeric(value(row, "營業收入-去年同月增減(%)", "營業收入-去年同月增減（%）", "去年同月增減(%)"))
+            yoy = numeric(value(row, "營業收入-去年同月增減(%)", "營業收入-去年同月增減（%）", "營業收入-去年同月增減百分比", "去年同月增減(%)", "去年同月增減(％)", "去年同月增減百分比", "LastYearMonthlyRevenueGrowthRate"))
             if yoy is not None:
                 stocks[c]["yoy"] = yoy
     # Never publish an incomplete or stale market snapshot as official.
