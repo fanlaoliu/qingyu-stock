@@ -92,7 +92,7 @@ def main():
             c = code(row)
             if c in stocks:
                 s = stocks[c]
-                # Missing fields from a later source must not erase valid metrics.\n                s.update({key: val for key, val in valuation(row).items() if val is not None})
+                merge_valuation(s, row)
     for row in results.get("twse_revenue", []) + results.get("tpex_revenue", []):
         c = code(row)
         if c in stocks:
