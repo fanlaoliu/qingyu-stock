@@ -61,6 +61,15 @@ def valuation(row):
         "yield_": numeric(value(row, "DividendYield", "DividendYieldRatio", "Yield", "YieldRatio", "CashDividendYield", "殖利率(%)", "殖利率", "殖利率(％)", "殖利率（%）")),
     }
 
+def valuation_source_diagnostics(rows):
+    """Summarize feed schema and parsing without exposing raw rows."""
+    columns = sorted({str(key) for row in rows[:50] for key in row.keys()})
+    parsed = sum(any(v is not None for v in valuation(row).values()) for row in rows)
+    codes = sum(code(row) is not None for row in rows)
+    return {"rows": len(rows), "rows_with_code": codes,
+            "rows_with_valuation": parsed, "columns": columns}
+
+
 def merge_valuation(stock, row):
     """Only replace metrics when the new source supplies an actual numeric value."""
     stock.update({key: val for key, val in valuation(row).items() if val is not None})
@@ -93,7 +102,9 @@ def main():
         try:
             results[name] = fetch(url)
             print(name, len(results[name]))
-            if results[name] and name in ("tpex_valuation", "tpex_revenue"):
+            if name in ("twse_valuation", "tpex_valuation"):
+                print(name, "schema_diagnostics:", json.dumps(valuation_source_diagnostics(results[name]), ensure_ascii=False))
+            elif results[name] and name in ("tpex_revenue",):
                 print(name, "columns:", list(results[name][0].keys()))
         except Exception as exc:
             errors[name] = str(exc)
