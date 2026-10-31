@@ -53,6 +53,14 @@ def code(row):
     c = value(row, "Code", "SecuritiesCompanyCode", "SecuritiesCode", "StockCode", "股票代號", "公司代號", "證券代號")
     return c if re.fullmatch(r"\d{4,6}", c) else None
 
+def valuation(row):
+    """Normalize common official valuation field aliases without fabricating missing data."""
+    return {
+        "pe": numeric(value(row, "PEratio", "PERatio", "PriceEarningRatio", "P/E", "本益比", "本益比(倍)", "本益比（倍）")),
+        "pb": numeric(value(row, "PBratio", "PBRatio", "PriceBookRatio", "P/B", "股價淨值比", "股價淨值比(倍)", "股價淨值比（倍）")),
+        "yield_": numeric(value(row, "DividendYield", "DividendYieldRatio", "Yield", "YieldRatio", "CashDividendYield", "殖利率(%)", "殖利率", "殖利率(％)", "殖利率（%）")),
+    }
+
 def main():
     results = {}
     errors = {}
@@ -79,9 +87,7 @@ def main():
             c = code(row)
             if c in stocks:
                 s = stocks[c]
-                s["pe"] = numeric(value(row, "PEratio", "PERatio", "PriceEarningRatio", "P/E", "本益比"))
-                s["pb"] = numeric(value(row, "PBratio", "PBRatio", "PriceBookRatio", "P/B", "股價淨值比"))
-                s["yield_"] = numeric(value(row, "DividendYield", "DividendYieldRatio", "Yield", "YieldRatio", "CashDividendYield", "殖利率(%)", "殖利率", "殖利率(％)"))
+                s.update(valuation(row))
     for row in results.get("twse_revenue", []) + results.get("tpex_revenue", []):
         c = code(row)
         if c in stocks:
