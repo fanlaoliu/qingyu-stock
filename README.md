@@ -1,58 +1,44 @@
-# 青嶼研究室｜台股智慧選股篩選器 V1
+# 青嶼研究室｜投資研究工作台
 
-本專案是**可執行的前端 + 官方盤後資料更新腳本**，不是即時行情，也不會由 AI 虛構股價。
+上市／上櫃官方盤後資料、策略交集、行業排除、指標熱力圖、法人籌碼、自選股與研究筆記。保留現有 GitHub／Cloudflare 架構與每日股票更新。
 
-## 快速啟動（Windows / macOS）
+## 本機啟動
 
-1. 安裝 Python 3.10+。
-2. 解壓縮後在專案資料夾開啟終端機。
-3. 先執行 `python -m http.server 8000`（Windows 若 python 不可用，試 `py -m http.server 8000`）。
-4. 在瀏覽器打開 http://localhost:8000 。此時顯示醒目的「DEMO 示範模式」，資料全部為虛構測試值。
-5. 另開終端機，在網路可連通官方服務的情況下執行 `python scripts/update_data.py`，重新整理網頁。資料更新成功後會顯示「官方盤後資料」。
+1. 安裝 Python 3.10+、Node 22+（測試用途）。
+2. 在專案根目錄執行 `python -m http.server 8000`，開啟 <http://localhost:8000>。
+3. 內附官方盤後快照；重新取得資料用 `python scripts/update_data.py` 及 `python scripts/update_chips.py`。
 
-> 更新需要網路連線。若官方服務不可用、拒絕雲端 IP 或回傳格式改變，更新腳本會顯示錯誤；若兩個價量來源都不可用，保留舊資料，不會假裝成功。只有成功來源的部分資料也可能產生快照，介面會列出成功的價量來源。建議確認 `data/stocks.json` 的 `meta.errors` 與 `meta.source_details`。
+網頁是靜態 HTML／CSS／JavaScript，資料由 Python 透過 TWSE／TPEx 官方來源擷取後寫入 JSON。更新失敗保留原有有日期的資料，不以示範值替代。自選股、筆記及儲存條件只在使用者裝置保存；沒有跨裝置同步、下單或個人化投資建議。
 
-## 功能
+## iPhone App、策略交集與籌碼面（此分支）
 
-- 搜尋股票代號與名稱、上市/上櫃切換
-- PE、PB 上限、殖利率下限、月營收年增下限；缺值不會通過被指定的門檻
-- 排序、分頁、CSV 匯出、響應式手機介面
-- 當官方欄位缺漏時顯示「—」，不偽造指標
-- 官方資料取得失敗時不以示範資料冒充真實行情
+- `ios/Qingyu/Qingyu.xcodeproj`：SwiftUI + WKWebView iPhone／iPad 專案，原生返回、分享、載入進度、重試與下載分享。最低 iOS 17；開發與簽署步驟見 [ios/README.md](ios/README.md)。這不是已簽署的 IPA，目前未發佈 App Store／TestFlight。
+- 根目錄 PWA：Safari 分享 → 加入主畫面。行動版安全區、固定底部導覽、本機自選與筆記備份。Service Worker 不快取頁面、行情或私人筆記，離線只顯示重新連線提示。
+- **多策略全部符合（AND）**：策略頁按鈕可複選，選擇成長、低估值、股息、進取等組合，再按「查看全部符合個股」。所有已選策略、手動篩選、自選、行業排除與籌碼條件一起取交集；取消其中一項不會清掉其他策略。沒有交集就顯示0檔。舊的單策略儲存設定／備份可載入。
+- **籌碼頁與個股明細**：外資（不含外資自營商）、投信、自營商、合計的當日淨買賣超。原始儲存單位股，UI÷1,000換算張，零與缺值分開。可疊加外資買超、投信買超、合計買超或三類皆買超到策略交集。
+- **期間核對**：策略只採7日內行情、同日估值；營收型策略另需100日內的實際營收月份。`scripts/update_data.py` 現在保留 `valuationDate`、`revenueMonth`、`cumulative`，沒有日期不從股價日期推定。這修復舊快照遺失期間、累計欄位而無法判定策略的問題。
+- **歷史累積**：`scripts/update_chips.py` 每日保留最多60期。5／20日累計須逐個平日完整；休市尚未核對或有缺日就不計算。連買／連賣遇缺值、缺日立即停止；歷史起點未確認則只顯示「已知N日」，不宣稱完整連續天數。本次初始籌碼快照僅1期，因此5／20日目前為「—」。
 
-## 架構
+### 資料與更新
 
-`TWSE / TPEx OpenAPI → Python 更新程式 → data/stocks.json → HTML / CSS / JS 前端`
+網頁直接讀取 `./data/stocks.json`、`./data/chips.json`，不依賴 Sites 專用 `/api/market`。繼續保留原本週一至週五 UTC 11:15 的股票更新排程，另接籌碼步驟；籌碼失敗不阻擋股票日更。失敗市場保留原有日期；兩市場皆失敗不覆寫檔案。更新結果會顯示市場日期、來源錯誤及筆數。資料檔不包含使用者筆記或憑證。
 
-端點：
-- TWSE `https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL`
-- TWSE `https://openapi.twse.com.tw/v1/exchangeReport/BWIBBU_ALL`
-- TWSE `https://openapi.twse.com.tw/v1/opendata/t187ap05_L`
-- TPEx `https://www.tpex.org.tw/openapi/v1/tpex_mainboard_quotes`
-- TPEx `https://www.tpex.org.tw/openapi/v1/tpex_mainboard_peratio_analysis`
+官方籌碼來源：
 
-**注意：** 上櫃 API 的欄位映射尚未在本執行環境取得實際回應驗證；目前提供容錯欄位映射，上線前請於可連線環境測試並依正式回應調整。月營收 YoY 亦僅對已明確映射的欄位填值。ROE、法人籌碼、即時行情、AI 投資建議及使用者登入尚未開發。
+- TWSE：<https://www.twse.com.tw/rwd/zh/fund/T86?selectType=ALLBUT0999&response=json>
+- TPEx：<https://www.tpex.org.tw/openapi/v1/tpex_3insti_daily_trading>；欄位定義 <https://www.tpex.org.tw/openapi/swagger.json>
 
-## 部署 Cloudflare Pages（建議）
+自營商已包含外資自營商，合計不重複加入外資自營商。管線依欄名解析、驗證日期與涵蓋率，並核對合計。
 
-1. 建立 GitHub repository，將解壓縮後**所有檔案（包含 `.github` 隱藏資料夾）**推到 repository 根目錄。
-2. 登入 Cloudflare → Workers & Pages → Create → Pages → Connect to Git。
-3. 選擇剛建立的 repository，Framework preset 選 `None`，Build command 留空，Output directory 指向專案根目錄 `.`。
-4. 部署後 Cloudflare 會提供 `pages.dev` 網址。
-5. 在 GitHub 的 Actions 頁面手動執行 `Update official EOD snapshots`。若工作流程沒有出現，確認 `.github/workflows/update-data.yml` 已推送至 GitHub。
-6. 檢查 Actions 執行記錄；若成功會更新 `data/stocks.json` 並觸發 Cloudflare 重新部署。排程為台灣時間工作日 19:15（GitHub Actions 有延遲可能），**不保證官方當日數據已發布**。
-7. 每次更新後檢查網站資料日期及 errors。如果有 API 擋掉 GitHub 雲端 IP，可在自己電腦執行更新並 push JSON。
+### 本機驗證
 
-**重要**：Cloudflare 的實際使用與商業條件、TWSE/TPEx 資料再利用授權及顯示規範，對外收費前務必重新確認。GitHub Pages 不適合作為營運 SaaS 的免費商業主機。
+```sh
+python -m unittest discover -s tests -v
+node --test tests/*.test.mjs
+python scripts/audit_coverage.py
+python -m http.server 8000
+```
 
-## 測試
+Node 22或以上；以 HTTP 開啟根目錄。GitHub Quality gate 包含 Python／Node 回歸與 macOS 的 iOS 模擬器免簽署編譯。沒有把原生模擬器編譯視為 iPhone 實機驗收。
 
-`python -m unittest discover -s tests -v`
-
-## 免責與資料準確性
-
-- 市場資料會延遲，節假日可能仍為上一交易日。
-- 若取得部分來源，市場覆蓋不完整；檢查 meta.sources。
-- 資料可能含證券型 ETF 或非一般公司代號；MVP 尚未完整辨認證券種類。建議加入股票基本資料表後再提供全市場統計。
-- 用戶輸入的門檻不構成投資推薦，結果不代表未來報酬。
-- 目前只使用同一資料快照中的價量與比率；月營收 YoY 對應的月份未在每筆資料列中顯示，正式公開前應補上營收年月並做資料期間檢驗。
+此分支僅供 PR 審核，不直接合併或部署，不更動既有存取可見性。原生預設 URL 仍指向現有正式站；新功能須在部署獲准後才會出現在該網址。正式裝置與行動／桌面瀏覽器完整驗收仍需在含此分支的核准測試站進行。

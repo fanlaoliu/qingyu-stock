@@ -1,0 +1,21 @@
+{
+  "id": "/",
+  "name": "青嶼研究室｜台股投資工作台",
+  "short_name": "青嶼研究室",
+  "description": "私人台股研究 App：股票篩選、熱力圖、策略與研究筆記。",
+  "lang": "zh-Hant",
+  "start_url": "/?app=1",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#071523",
+  "theme_color": "#071523",
+  "icons": [
+    {"src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ],
+  "shortcuts": [
+    {"name": "股票熱力圖", "url": "/?view=heatmap&app=1"},
+    {"name": "投資理財策略", "url": "/?view=strategies&app=1"}
+  ]
+}

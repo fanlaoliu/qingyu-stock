@@ -18,6 +18,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test research calculations and app assets
+        run: node --test tests/*.test.mjs
       - name: Compile Python
         run: python -m compileall -q scripts tests
       - name: Run unit tests
@@ -41,3 +46,11 @@ jobs:
               assert all(isinstance(s, dict) and s.get("code") and s.get("market") for s in stocks), "invalid stock row"
               print(f"Validated {len(stocks)} rows")
           PY
+
+  ios-build:
+    runs-on: macos-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build iOS simulator app without signing
+        run: xcodebuild -project ios/Qingyu/Qingyu.xcodeproj -scheme Qingyu -sdk iphonesimulator -configuration Debug CODE_SIGNING_ALLOWED=NO build
