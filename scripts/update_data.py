@@ -49,7 +49,7 @@ def date(raw):
     return None
 
 def code(row):
-    c = value(row, "Code", "SecuritiesCompanyCode", "SecuritiesCode", "股票代號", "公司代號", "證券代號")
+    c = value(row, "Code", "SecuritiesCompanyCode", "SecuritiesCode", "StockCode", "股票代號", "公司代號", "證券代號")
     return c if re.fullmatch(r"\d{4,6}", c) else None
 
 def main():
@@ -76,9 +76,9 @@ def main():
             c = code(row)
             if c in stocks:
                 s = stocks[c]
-                s["pe"] = numeric(value(row, "PEratio", "PERatio", "P/E", "本益比"))
-                s["pb"] = numeric(value(row, "PBratio", "PBRatio", "P/B", "股價淨值比"))
-                s["yield_"] = numeric(value(row, "DividendYield", "Yield", "殖利率(%)", "殖利率"))
+                s["pe"] = numeric(value(row, "PEratio", "PERatio", "PriceEarningRatio", "P/E", "本益比"))
+                s["pb"] = numeric(value(row, "PBratio", "PBRatio", "PriceBookRatio", "P/B", "股價淨值比"))
+                s["yield_"] = numeric(value(row, "DividendYield", "DividendYieldRatio", "Yield", "殖利率(%)", "殖利率"))
     for row in results.get("twse_revenue", []):
         c = code(row)
         if c in stocks:
