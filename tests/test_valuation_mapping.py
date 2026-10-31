@@ -108,6 +108,13 @@ class ValuationMappingTests(unittest.TestCase):
         self.assertIn('stocks[c]["market"] == market', source)
         self.assertIn('stocks[c]["industry"] = group', source)
 
+    def test_equity_regex_matches_real_four_digit_codes(self):
+        import re
+        source = SCRIPT.read_text(encoding="utf-8")
+        self.assertIn('re.fullmatch(r"\\d{4}", s["code"])', source)
+        self.assertTrue(re.fullmatch(r"\\d{4}", "2330"))
+        self.assertIsNone(re.fullmatch(r"\\d{4}", "0050A"))
+
     def test_industry_coverage_rejects_missing_company_feed(self):
         with self.assertRaisesRegex(RuntimeError, "company master feed missing"):
             module.validate_industry_coverage({}, {"twse_company": []})
