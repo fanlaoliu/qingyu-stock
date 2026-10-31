@@ -26,6 +26,16 @@ class ValuationMappingTests(unittest.TestCase):
             "pe": None, "pb": None, "yield_": None
         })
 
+    def test_merge_preserves_existing_metrics_when_source_missing(self):
+        stock = {"pe": 18.2, "pb": 1.4, "yield_": 3.1}
+        module.merge_valuation(stock, {"PEratio": "—", "PBratio": "", "DividendYield": "N/A"})
+        self.assertEqual(stock, {"pe": 18.2, "pb": 1.4, "yield_": 3.1})
+
+    def test_merge_updates_only_present_metrics(self):
+        stock = {"pe": 18.2, "pb": 1.4, "yield_": 3.1}
+        module.merge_valuation(stock, {"PEratio": "15.6", "PBratio": "—"})
+        self.assertEqual(stock, {"pe": 15.6, "pb": 1.4, "yield_": 3.1})
+
     def test_numeric_rejects_nonfinite_and_invalid(self):
         for value in ("--", "除零", "N/A", "NaN", "Infinity"):
             self.assertIsNone(module.numeric(value))
