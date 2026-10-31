@@ -61,6 +61,11 @@ def valuation(row):
         "yield_": numeric(value(row, "DividendYield", "DividendYieldRatio", "Yield", "YieldRatio", "CashDividendYield", "殖利率(%)", "殖利率", "殖利率(％)", "殖利率（%）")),
     }
 
+def industry(row):
+    """Use only an explicitly supplied official industry field."""
+    return value(row, "產業別", "產業類別", "Industry", "IndustryName") or None
+
+
 def valuation_source_diagnostics(rows):
     """Summarize feed schema and parsing without exposing raw rows."""
     columns = sorted({str(key) for row in rows[:50] for key in row.keys()})
@@ -130,6 +135,9 @@ def main():
             yoy = numeric(value(row, "營業收入-去年同月增減(%)", "營業收入-去年同月增減（%）", "營業收入-去年同月增減百分比", "去年同月增減(%)", "去年同月增減(％)", "去年同月增減百分比", "LastYearMonthlyRevenueGrowthRate"))
             if yoy is not None:
                 stocks[c]["yoy"] = yoy
+            group = industry(row)
+            if group:
+                stocks[c]["industry"] = group
     # Never publish an incomplete or stale market snapshot as official.
     if "twse_price" not in results or "tpex_price" not in results:
         raise RuntimeError("Incomplete market fetch; preserving previous data: " + json.dumps(errors, ensure_ascii=False))
@@ -146,7 +154,7 @@ def main():
         raise RuntimeError(f"Stale or future snapshot: {latest}. Previous file preserved.")
     for market in ("上市", "上櫃"):
         print("Coverage", market, {key: sum(s["market"] == market and s[key] is not None for s in stocks.values()) for key in ("pe", "pb", "yield_", "yoy")})
-    clean = [{"code":s["code"], "name":s["name"], "market":s["market"], "price":s["price"], "pe":s["pe"], "pb":s["pb"], "yield":s["yield_"], "yoy":s["yoy"], "date":s["date"]} for s in stocks.values()]
+    clean = [{"code":s["code"], "name":s["name"], "market":s["market"], "price":s["price"], "pe":s["pe"], "pb":s["pb"], "yield":s["yield_"], "yoy":s["yoy"], "date":s["date"], "industry":s.get("industry")} for s in stocks.values()]
     dates = [s["date"] for s in clean if s["date"]]
     now = dt.datetime.now(dt.timezone(dt.timedelta(hours=8)))
     payload = {"meta":{"mode":"official", "trade_date":max(dates) if dates else None, "updated_at":now.strftime("%Y-%m-%d %H:%M UTC+08:00"), "sources":[k for k in results if k in ("twse_price", "tpex_price")], "source_details":list(results), "errors":errors, "note":"官方盤後快照；缺值為 null；營收年增為最近公布月份，可能不等於交易日期。"}, "stocks":sorted(clean, key=lambda s:s["code"])}
