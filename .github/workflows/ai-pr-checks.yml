@@ -1,0 +1,55 @@
+name: AI PR checks
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Compile data updater
+        run: python -m py_compile scripts/update_data.py
+      - name: Python unit tests
+        run: python -m unittest discover -s tests -v
+      - name: Validate snapshot and required website files
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          assert pathlib.Path('index.html').is_file(), 'index.html missing'
+          assert pathlib.Path('scripts/update_data.py').is_file(), 'updater missing'
+          p = pathlib.Path('data/stocks.json')
+          if p.exists():
+              with p.open(encoding='utf-8') as f:
+                  snapshot = json.load(f)
+              assert isinstance(snapshot, (dict, list)), 'invalid snapshot root'
+              print('Snapshot JSON valid')
+          else:
+              print('Snapshot not present; skipped')
+          PY
+  preview-smoke:
+    if: ${{ vars.CLOUDFLARE_PREVIEW_URL != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify configured preview URL
+        env:
+          PREVIEW_URL: ${{ vars.CLOUDFLARE_PREVIEW_URL }}
+        run: |
+          python - <<'PY'
+          import os, urllib.request
+          url = os.environ['PREVIEW_URL'].rstrip('/')
+          assert url.startswith('https://'), 'HTTPS required'
+          for path in ('/', '/data/stocks.json'):
+              with urllib.request.urlopen(url + path, timeout=20) as response:
+                  assert response.status == 200, f'{path}: {response.status}'
+                  body = response.read()
+                  assert body, f'{path}: empty response'
+          print('Preview reachable')
+          PY
