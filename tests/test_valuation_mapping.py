@@ -74,6 +74,25 @@ class ValuationMappingTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "feed missing"):
             module.validate_valuation_coverage({}, {"twse_valuation": []})
 
+    def test_schema_diagnostics_reports_parsed_valuation_rows(self):
+        rows = [
+            {"Code": "2330", "PEratio": "21.5", "PBratio": "4.3"},
+            {"Code": "2317", "PEratio": "—"},
+            {"unexpected": "value"},
+        ]
+        report = module.valuation_source_diagnostics(rows)
+        self.assertEqual(report["rows"], 3)
+        self.assertEqual(report["rows_with_code"], 2)
+        self.assertEqual(report["rows_with_valuation"], 1)
+        self.assertIn("PEratio", report["columns"])
+        self.assertIn("unexpected", report["columns"])
+
+    def test_schema_diagnostics_handles_empty_feed(self):
+        self.assertEqual(module.valuation_source_diagnostics([]), {
+            "rows": 0, "rows_with_code": 0,
+            "rows_with_valuation": 0, "columns": [],
+        })
+
     def test_numeric_rejects_nonfinite_and_invalid(self):
         for value in ("--", "除零", "N/A", "NaN", "Infinity"):
             self.assertIsNone(module.numeric(value))
