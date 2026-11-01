@@ -74,3 +74,15 @@ test('SMA signals only use current and prior closes; parameters and input export
  assert.equal(r.assumptions.strategy,'sma');assert.deepEqual(r.input,h);assert.equal(h.bars[1].signal,false);
  assert.throws(()=>M.backtest(h,{strategy:'sma',lookback:1}));
 });
+test('walk-forward has disjoint holdouts, exact cutoff, compounds independent folds',()=>{
+ const h=history(Array.from({length:20},(_,i)=>100+i*10),Array(20).fill(true));
+ const options={trainBars:6,testBars:3,feeBps:0,taxBps:0,slippageBps:0,initial:1000};
+ const w=M.walkForward(h,options);assert.equal(w.folds.length,4);assert.equal(w.unusedTailBars,2);
+ assert.equal(w.folds[0].trainEnd,h.bars[5].date);assert.equal(w.folds[0].start,h.bars[6].date);
+ for(let i=1;i<w.folds.length;i++)assert.ok(w.folds[i].start>w.folds[i-1].end);
+ const expected=w.folds.reduce((v,f)=>v*f.final/1000,1);close(w.returnPct,(expected-1)*100);
+ const changed=structuredClone(h);changed.bars.at(-1).close=999;
+ assert.deepEqual(M.walkForward(changed,options).folds[0],w.folds[0]);
+ assert.throws(()=>M.walkForward(h,{trainBars:100,testBars:20}));
+ assert.throws(()=>M.walkForward(h,{trainBars:2,testBars:4}));
+});

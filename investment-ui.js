@@ -43,7 +43,7 @@
  <label>歷史JSON<input id="backtestImport" type="file" accept=".json,application/json"></label><button id="backtestTemplate">下載歷史資料格式</button>
  <div class="controls"><label>回測策略<select id="btStrategy"><option value="imported">匯入的歷史訊號</option><option value="sma">收盤價高於移動平均線</option></select></label><label>均線期數（2至250）<input id="btLookback" type="number" min="2" max="250" value="20"></label><label>初始資金<input id="btInitial" type="number" value="100000" min="1"></label><label>單邊手續費bps<input id="btFee" type="number" value="14.25" min="0" max="500" step="any"></label><label>賣出稅bps<input id="btTax" type="number" value="30" min="0" max="500" step="any"></label><label>單邊滑價bps<input id="btSlip" type="number" value="10" min="0" max="500" step="any"></label><label>樣本內比例<input id="btSplit" type="number" value="0.7" min="0.5" max="0.9" step="0.05"></label></div>
  <p class="muted">1bps＝0.01%。成本為可調整參數，請依商品與券商核對；使用可分割股數、全額持有或現金，不模擬整股限制及流動性。均線策略只讀取當期及先前收盤價；尚未累積足夠期數保持現金。各期間最後一筆強制平倉。</p>
- <button id="backtestRun">執行回測</button><button id="backtestExport">匯出結果與參數</button><p id="backtestStatus" role="status" aria-live="polite"></p><div id="backtestResults"></div><div id="backtestCurve"></div>`);
+ <h3>固定參數滾動驗證</h3><div class="controls"><label>訓練期筆數<input id="wfTrain" type="number" value="60" min="2"></label><label>每段測試筆數<input id="wfTest" type="number" value="20" min="2"></label></div><button id="walkForwardRun">執行滾動驗證</button><div id="walkForwardResults"></div><button id="backtestRun">執行回測</button><button id="backtestExport">匯出結果與參數</button><p id="backtestStatus" role="status" aria-live="polite"></p><div id="backtestResults"></div><div id="backtestCurve"></div>`);
  const views=[['advanced','advancedPanel','進階研究'],['portfolio','portfolioPanel','投資組合'],['assistant','assistantPanel','研究助理'],['backtest','backtestPanel','策略回測']];
  for(const [view,id,label] of views){sections[view]=[$i(id)];for(const nav of document.querySelectorAll('aside nav,.mobile-nav')){const b=document.createElement('button');b.type='button';b.className='nav';b.dataset.view=view;b.textContent=label;b.addEventListener('click',()=>setView(view));nav.append(b);}}
  const today=new Date(Date.now()+8*3600000).toISOString().slice(0,10);$i('tradeDate').value=today;
@@ -108,7 +108,9 @@
   }catch(e){status('cloudResearchAnswer',e.name==='TimeoutError'?'AI回覆逾時；可改用本機來源摘要。':e.message);}finally{button.disabled=false;}
  });
  let historyData=null;
- fileInput('backtestImport','backtestStatus',data=>{historyData=data;lastBacktest=null;$i('backtestResults').replaceChildren();$i('backtestCurve').replaceChildren();status('backtestStatus','已讀入檔案，執行時會檢查日期、公開日及調整方式。');});
+ let lastWalkForward=null;
+ $i('walkForwardRun').addEventListener('click',()=>safe('backtestStatus',()=>{lastWalkForward=null;$i('walkForwardResults').replaceChildren();const r=M.walkForward(historyData,{initial:number('btInitial'),feeBps:number('btFee'),taxBps:number('btTax'),slippageBps:number('btSlip'),strategy:$i('btStrategy').value,lookback:number('btLookback'),trainBars:number('wfTrain'),testBars:number('wfTest')});lastWalkForward=r;status('backtestStatus',r.warning+'｜累積報酬 '+fmt(r.returnPct)+'%｜最大回撤 '+fmt(r.maxDrawdownPct)+'%｜尾端未使用 '+r.unusedTailBars+' 筆');table('walkForwardResults',['訓練起日','訓練迄日','測試起日','測試迄日','報酬%','回撤%','完成交易'],r.folds.map(f=>[f.trainStart,f.trainEnd,f.start,f.end,fmt(f.returnPct),fmt(f.maxDrawdownPct),f.trades]));}));
+ fileInput('backtestImport','backtestStatus',data=>{historyData=data;lastBacktest=null;lastWalkForward=null;$i('walkForwardResults').replaceChildren();$i('backtestResults').replaceChildren();$i('backtestCurve').replaceChildren();status('backtestStatus','已讀入檔案，執行時會檢查日期、公開日及調整方式。');});
  $i('backtestTemplate').addEventListener('click',()=>download('qingyu-backtest-template.json',{version:1,code:'2330',source:'https://原始歷史來源網址',adjustment:'total-return',bars:[],schema:{date:'YYYY-MM-DD',close:'正數：總報酬調整收盤價',signal:'boolean：當時策略持有意願',knownAt:'YYYY-MM-DD：訊號最早公開日，不晚於date'},note:'請提供至少7筆真實歷史資料；樣本內外須各至少2筆。'}));
  $i('backtestRun').addEventListener('click',()=>safe('backtestStatus',()=>{
   lastBacktest=null;$i('backtestResults').replaceChildren();$i('backtestCurve').replaceChildren();
@@ -117,7 +119,7 @@
   table('backtestResults',['區段','起日','迄日','報酬%','最大回撤%','勝率%','完成交易','買入持有%'],[['全期間',r.full],['樣本內',r.inSample],['樣本外（獨立起算）',r.outOfSample]].map(([name,v])=>[name,v.start,v.end,fmt(v.returnPct),fmt(v.maxDrawdownPct),fmt(v.winRate),v.trades,fmt(v.benchmarkPct)]));
   table('backtestCurve',['日期（全期間資產曲線）','期末資產'],r.full.curve.map(p=>[p.date,fmt(p.equity)]));
  }));
- $i('backtestExport').addEventListener('click',()=>safe('backtestStatus',()=>{if(!lastBacktest)throw Error('請先成功執行回測');download('qingyu-backtest-result.json',lastBacktest);}));
+ $i('backtestExport').addEventListener('click',()=>safe('backtestStatus',()=>{if(!lastBacktest&&!lastWalkForward)throw Error('請先成功執行回測或滾動驗證');download('qingyu-backtest-result.json',{...lastBacktest,input:historyData,walkForward:lastWalkForward});}));
  const old=globalThis.refreshResearchTools;globalThis.refreshResearchTools=function(){old?.();drawPortfolio();};
  drawPortfolio();const initial=new URLSearchParams(location.search).get('view');if(views.some(v=>v[0]===initial))setView(initial);
 })();

@@ -121,8 +121,25 @@
    const final=curve.at(-1).equity,benchmark=initial/(bars[start].close*(1+costBuy))*bars[end-1].close*(1-costSell);
    return {start:bars[start].date,end:bars[end-1].date,returnPct:(final/initial-1)*100,maxDrawdownPct:Math.max(0,-drawdown*100),winRate:trades?wins/trades*100:null,trades,final,benchmarkPct:(benchmark/initial-1)*100,curve};
   }
-  const cut=Math.floor(bars.length*split);check(cut>=2&&bars.length-cut>=2,'樣本內外各需至少2筆，請增加歷史資料');
+  const cut=options.cutoffBars??Math.floor(bars.length*split);check(Number.isInteger(cut)&&cut>=2&&bars.length-cut>=2,'樣本內外各需至少2筆，請增加歷史資料');
   return {full:run(0,bars.length),inSample:run(0,cut),outOfSample:run(cut,bars.length),cutoff:bars[cut].date,assumptions:{feeBps:fee,taxBps:tax,slippageBps:slip,initial,split,source:input.source,code:input.code,strategy,lookback},input:{...input,bars:input.bars.map(b=>({...b}))},warning:'單一證券、'+(strategy==='sma'?'使用歷史均線訊號':'使用匯入訊號')+'；knownAt與總報酬調整為提供者聲明，無法自行證明沒有前視或倖存者偏誤。樣本外獨立起算，需凍結策略後再匯入驗證。'};
  }
- root.QingyuInvestment=Object.freeze({date,url,financials,latestFinancial,quality,valuation,ledger,positions,alerts,research,answer,backtest});
+ function walkForward(input,options={}){
+  // Fixed parameters only: no search using later folds and no overlapping test bars.
+  const validated=backtest(input,options),train=options.trainBars??60,testBars=options.testBars??20;
+  check(Number.isInteger(train)&&train>=2&&Number.isInteger(testBars)&&testBars>=2,'訓練及測試期數須為至少2的整數');
+  check(train>=testBars&&train<=9*testBars,'訓練期須為測試期的1至9倍');
+  if(options.strategy==='sma')check((options.lookback??20)<=train,'均線期數不可超過訓練期');
+  const bars=input.bars,folds=[];
+  for(let start=0;start+train+testBars<=bars.length;start+=testBars){
+   const segment={...input,bars:bars.slice(start,start+train+testBars)};
+   const result=backtest(segment,{...options,split:train/(train+testBars),cutoffBars:train});
+   folds.push({trainStart:segment.bars[0].date,trainEnd:segment.bars[train-1].date,...result.outOfSample});
+  }
+  check(folds.length>0,'歷史資料不足以形成完整滾動區段');
+  let equity=1,peak=1,maxDrawdown=0;const curve=[];
+  for(const fold of folds){const initial=validated.assumptions.initial;const base=equity;for(const p of fold.curve){const value=base*p.equity/initial;peak=Math.max(peak,value);maxDrawdown=Math.max(maxDrawdown,1-value/peak);curve.push({date:p.date,equity:initial*value});}equity*=fold.final/initial;}
+  return {folds,curve,returnPct:(equity-1)*100,maxDrawdownPct:maxDrawdown*100,unusedTailBars:(bars.length-train)%testBars,options:{...validated.assumptions,trainBars:train,testBars},warning:'固定參數滾動驗證，未自動最佳化。各測試區段獨立進出、強制平倉後複利串接；不重疊測試資料。未滿完整區段的尾端不計入。'};
+ }
+ root.QingyuInvestment=Object.freeze({date,url,financials,latestFinancial,quality,valuation,ledger,positions,alerts,research,answer,backtest,walkForward});
 })(globalThis);

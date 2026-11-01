@@ -22,11 +22,14 @@ jobs:
       - name: Fetch official institutional flows
         continue-on-error: true
         run: python scripts/update_chips.py
+      - name: Archive first-observed official snapshot
+        run: python scripts/archive_history.py
       - name: Commit updated data
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add data/stocks.json
+          if [ -d data/history ]; then git add data/history; fi
           if [ -f data/chips.json ]; then git add data/chips.json; fi
           git diff --cached --quiet || (git commit -m 'Update official EOD snapshots' && git push)
 
