@@ -60,6 +60,7 @@
   const m=R.metrics[key],period=r[m.period],e=heatEvaluations.get(r.code)||evaluatePriority(r);
   $r('heatInspector').innerHTML='<strong>'+esc(r.code+' '+r.name)+'</strong><span>'+esc(m.label)+' '+formatted(metricValue(r,key),key)+'</span><small>'+esc(r.market)+' · '+esc(r.industry?'官方產業 '+r.industry:'未分類')+' · 指標期間 '+esc(period||'未提供')+' · 行情 '+esc(r.date||'未提供')+'<br>'+esc(key==='yoy'?r.revenueOrigin||'來源未提供':r.valuationOrigin||'來源未提供')+' · 點擊或按 Enter 開啟完整研究卡</small>';
   const score=document.createElement('p');score.className='priority-explanation';score.textContent='研究優先度：'+(e.score===null?'資料待補（不評分）':e.score+'/100 · '+e.band)+'｜'+e.parts.map(p=>p.label+' '+(p.value===null?'—':p.value)+'/'+p.max).join(' · ')+(e.missing.length?'｜'+e.missing.join('；'):'')+'｜籌碼日期 '+(e.chipDate||'未提供');$r('heatInspector').append(score);
+  if(globalThis.QingyuScoring){const full=QingyuScoring.current(r,globalThis.analyzeChipStock?.(r));const note=document.createElement('p');note.className='priority-explanation';note.textContent='完整50／25／15／10模型：'+full.status+'｜'+full.parts.map(p=>p.label+' '+(p.value===null?'未提供（'+p.reason+'）':p.value+'/'+p.max)).join('；')+'｜已具資料權重 '+full.availableWeight+'/100；缺值不補0、不放大其餘權重。基本面尚缺獲利／現金流等完整來源契約；現有研究優先度另行顯示。';$r('heatInspector').append(note);}
  }
  function drawHeatmap(){
   const key=$r('heatMetric').value,m=R.metrics[key],market=$r('heatMarket').value,industry=$r('heatIndustry').value,q=$r('heatSearch').value.trim().toLowerCase(),scope=$r('heatScope').value;
