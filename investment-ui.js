@@ -13,6 +13,7 @@
  };
  const download=(name,data,type='application/json')=>{const a=document.createElement('a'),u=URL.createObjectURL(new Blob([type==='application/json'?JSON.stringify(data,null,2):data],{type}));a.href=u;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(u),1000);};
  const save=(key,value)=>localStorage.setItem(key,JSON.stringify(value));
+ let officialEps=null;
  const stock=()=>{const s=stocks.find(s=>s.code===$i('researchCode').value.trim());if(!s)throw Error('找不到股票，請確認資料已載入及代號正確。');return s;};
  const number=id=>{const raw=$i(id).value.trim();if(raw==='')throw Error('請填寫 '+$i(id).labels?.[0]?.textContent);const n=Number(raw);if(!Number.isFinite(n))throw Error('數字格式錯誤');return n;};
  const panel=(id,title,html)=>{const section=document.createElement('section');section.id=id;section.className='research-card investment-panel';section.hidden=true;section.innerHTML='<h2>'+title+'</h2>'+html;const footer=document.querySelector('main footer');if(footer)footer.before(section);else document.querySelector('main').append(section);return section;};
@@ -21,7 +22,7 @@
  <div class="controls"><label>股票代號<input id="researchCode" inputmode="numeric" value="2330" maxlength="7"></label><label>財務資料JSON<input id="financialImport" type="file" accept=".json,application/json"></label></div>
  <div class="investment-actions"><button id="financialTemplate">下載財務格式範本</button><button id="financialClear">清除匯入財報</button><button id="financialInspect">財務品質與籌碼</button></div>
  <p id="advancedStatus" role="status" aria-live="polite"></p><div id="financialQuality"></div>
- <h3>情境合理價與安全邊際</h3><p class="muted">只使用截至行情日已公開的正TTM EPS。三種本益比為你自行設定的假設；不是歷史合理價或預測。</p>
+ <h3>官方EPS摘要（自動資料）</h3><p class="muted">此接口只涵蓋部分公司。官方季別原始值不等於TTM，累計口徑尚未核對；出表日期不是原始公告日，不參與估值或歷史回測。</p><p><a href="https://data.gov.tw/dataset/20756" target="_blank" rel="noopener noreferrer">上市EPS官方資料集／授權</a> · <a href="https://data.gov.tw/dataset/20757" target="_blank" rel="noopener noreferrer">上櫃EPS官方資料集／授權</a></p><button id="officialEpsRefresh">重新讀取官方EPS</button><p id="officialEpsStatus" role="status"></p><div id="officialEpsResult"></div><h3>情境合理價與安全邊際</h3><p class="muted">只使用截至行情日已公開的正TTM EPS。三種本益比為你自行設定的假設；不是歷史合理價或預測。</p>
  <div class="controls"><label>保守PE<input id="peLow" type="number" value="12" min="0.1" max="200" step="0.1"></label><label>基準PE<input id="peBase" type="number" value="18" min="0.1" max="200" step="0.1"></label><label>樂觀PE<input id="peHigh" type="number" value="25" min="0.1" max="200" step="0.1"></label><label>目標安全邊際%<input id="marginTarget" type="number" value="20" min="0" max="99"></label></div>
  <button id="valueRun">計算情境估值</button><div id="valuationResults"></div>
  <h3>同期間個股比較</h3><label>2至5個代號，以逗號分開<input id="advancedCompareCodes" value="2330,2454" maxlength="60"></label><button id="advancedCompare">比較估值與財務品質</button><div id="advancedCompareResult"></div>`);
@@ -57,7 +58,10 @@
   table('transactionRows',['ID','日期','代號','類型','股數／倍數','單價／現金','費用','稅'],book.transactions.map(t=>[t.id,t.date,t.code,t.type,fmt(t.quantity),fmt(t.price),fmt(t.fee),fmt(t.tax)]));
   table('alertResults',['代號','條件','目標','盤後價格','日期','狀態'],M.alerts(book,stocks,asOf).map(a=>[a.code,a.direction==='above'?'≥':'≤',fmt(a.price),fmt(a.current),a.date||'—',a.triggered===null?'缺同日資料':a.triggered?'已達條件':'未達條件']));
  }
- function inspect(){
+ function drawOfficialEps(){const code=$i('researchCode').value.trim(),rows=(officialEps?.records||[]).filter(r=>r.code===code);table('officialEpsResult',['代號','市場','報表期末','官方EPS（非TTM）','出表日期','擷取時間'],rows.map(r=>[r.code,r.market,r.periodEnd,fmt(r.eps),r.reportDate,r.observedAt]));if(!rows.length)$i('officialEpsResult').textContent='此代號尚無可用官方EPS摘要；不代表獲利為0。';}
+ async function loadOfficialEps(){const b=$i('officialEpsRefresh');b.disabled=true;try{const res=await fetch('/data/financial-summary.json',{cache:'no-store',signal:AbortSignal.timeout(20000)});if(!res.ok)throw Error('EPS資料HTTP '+res.status);const data=await res.json();if(data.version!==1||data.kind!=='official-eps-summary'||!data.meta||typeof data.meta.updatedAt!=='string'||!data.meta.errors||typeof data.meta.errors!=='object'||!Array.isArray(data.records)||data.records.length>5000||data.records.some(r=>!r||!/^\d{4}$/.test(r.code)||!['上市','上櫃'].includes(r.market)||!M.date(r.periodEnd)||!M.date(r.reportDate)||!M.url(r.source)||!Number.isFinite(Date.parse(r.observedAt))||!(r.eps===null||typeof r.eps==='number'&&Number.isFinite(r.eps))))throw Error('官方EPS格式不符');officialEps=data;status('officialEpsStatus','涵蓋 '+data.records.length+' 筆（非全市場）｜更新 '+data.meta.updatedAt+'｜來源異常 '+(Object.keys(data.meta.errors||{}).join('、')||'無')+'。原始來源請見下方官方資料集連結。');drawOfficialEps();}catch(e){status('officialEpsStatus',e.message+(officialEps?'；保留前次資料及其日期。':'；不產生EPS推估。'));}finally{b.disabled=false;}}
+ $i('officialEpsRefresh').addEventListener('click',loadOfficialEps);$i('researchCode').addEventListener('input',drawOfficialEps);loadOfficialEps();
+ function inspect(){drawOfficialEps();
   const s=stock(),f=M.latestFinancial(financial,s),q=M.quality(f),chip=globalThis.analyzeChipStock?.(s);
   status('advancedStatus',s.code+' '+s.name+'｜行情 '+s.date+'｜財報 '+(f?f.periodEnd+'／公開日 '+f.publishedAt+'／來源 '+f.source:'未提供可用財報'));
   table('financialQuality',['檢查','結果'],[...q.checks.map(c=>[c.label,c.pass?'符合參考門檻':'未符合']),...q.missing.map(x=>[x,'資料不足']),['法人5日合計（股）',fmt(chip?.five?.total)],['法人20日合計（股）',fmt(chip?.twenty?.total)]]);
