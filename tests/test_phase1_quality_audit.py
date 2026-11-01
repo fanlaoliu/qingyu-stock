@@ -2,6 +2,7 @@
 import datetime as dt
 import importlib.util
 import pathlib
+import math
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
@@ -36,6 +37,15 @@ class AuditCoverageTests(unittest.TestCase):
     def test_invalid_snapshot_is_rejected(self):
         with self.assertRaises(ValueError):
             audit.analyze({"meta": {"mode": "official"}}, today=dt.date(2026, 11, 1))
+
+    def test_duplicate_identifiers_and_nonfinite_values(self):
+        rows = [{"code": "2330", "market": "上市", "price": math.nan},
+                {"code": "2330", "market": "上市", "price": math.inf},
+                {"code": "X", "market": "上櫃", "price": 1}]
+        result = audit.analyze(snapshot(rows), today=dt.date(2026, 11, 1))
+        self.assertEqual(len(result["duplicates"]), 1)
+        self.assertEqual(len(result["invalid_identifiers"]), 1)
+        self.assertEqual(result["markets"]["上市"]["available"]["price"], 0)
 
     def test_source_errors_are_preserved(self):
         result = audit.analyze(snapshot(errors={"TPEx": "unavailable"}), today=dt.date(2026, 11, 1))
