@@ -36,6 +36,29 @@
  $r('inspectIntersection').addEventListener('click',()=>{setView('screen');document.querySelector('.results').scrollIntoView({block:'start'});});
  $r('strategyCards').addEventListener('click',e=>{const b=e.target.closest('[data-strategy]');if(b)selectStrategy(b.dataset.strategy);});
 
+ const diagnostics=document.createElement('section');diagnostics.className='research-card';
+ diagnostics.innerHTML='<h3>策略未入選原因</h3><p class="muted">統計使用排除行業後的全部證券，未套用搜尋、自選、數值篩選與籌碼條件；各策略獨立統計，不是策略交集。資料不足者不當成未達門檻。</p><div id="strategyDiagnosticsSummary" class="table-wrap"></div><label for="diagnosticCode">查詢單一股票代號</label><input id="diagnosticCode" type="text" inputmode="numeric" maxlength="6" placeholder="例如 2330"><div id="strategyDiagnosticResult" role="status" aria-live="polite"></div>';
+ $r('strategyCards').after(diagnostics);
+ function drawDiagnosticStock(){
+  const box=$r('strategyDiagnosticResult'),code=$r('diagnosticCode').value.trim();box.replaceChildren();
+  if(!code){box.textContent='輸入代號，查看已選策略的通過或排除原因；未選策略時顯示全部策略。';return;}
+  const stock=stocks.find(r=>r.code===code);
+  if(!stock){box.textContent=stocks.length?'目前快照找不到此代號。':'股票資料尚未載入。';return;}
+  const title=document.createElement('p');title.textContent=stock.code+' '+stock.name+'｜行情 '+(stock.date||'未提供')+'｜估值 '+(stock.valuationDate||'未提供')+'｜營收 '+(stock.revenueMonth||'未提供');box.append(title);
+  if(!R.included(stock,excludedIndustries)){const p=document.createElement('p');p.textContent='目前此股票的行業已被排除，下列只說明策略本身。';box.append(p);}
+  const ids=R.normalizeStrategies(activeStrategies),now=Date.now();
+  for(const s of (ids.length?ids.map(R.strategy):R.strategies)){
+   const result=R.diagnose(stock,s.id,now),p=document.createElement('p');
+   p.textContent=s.name+'：'+({pass:'通過策略門檻',unavailable:'資料不足／不適用',fail:'未達策略門檻'}[result.status])+(result.reasons.length?'｜'+result.reasons.join('；'):'');box.append(p);
+  }
+  const note=document.createElement('p');note.className='muted';note.textContent='通過策略門檻不代表會出現在目前篩選結果；仍須符合其他已選策略、行業、自選、數值與籌碼條件。';box.append(note);
+ }
+ $r('diagnosticCode').addEventListener('input',drawDiagnosticStock);
+ function drawDiagnostics(universe,now){
+  $r('strategyDiagnosticsSummary').innerHTML='<table><caption>排除行業後 '+universe.length+' 檔證券，各列三項數量合計等於樣本總數</caption><thead><tr><th>策略</th><th>通過</th><th>資料不足／不適用</th><th>未達門檻</th></tr></thead><tbody>'+R.strategies.map(s=>{const c=R.strategySummary(universe,s.id,now);return '<tr><th scope="row">'+esc(s.name)+'</th><td>'+c.pass+'</td><td>'+c.unavailable+'</td><td>'+c.fail+'</td></tr>';}).join('')+'</tbody></table>';
+  drawDiagnosticStock();
+ }
+
  const heatControls=['heatMetric','heatMarket','heatIndustry','heatScope','heatSort','heatLimit','heatSearch','heatKnownPeriods'];
  function updateIndustryOptions(){
   const select=$r('heatIndustry'),old=select.value;
@@ -102,6 +125,7 @@
   syncExclusions();
   const now=Date.now();
   const universe=stocks.filter(r=>R.included(r,excludedIndustries));
+  drawDiagnostics(universe,now);
   for(const s of R.strategies){const usable=universe.filter(r=>R.eligible(r,s.id,now)).length,count=universe.filter(r=>R.matches(r,s.id,now)).length;$r('strategyCount-'+s.id).textContent='符合 '+count+' 檔 / 可核對 '+usable+' 檔（排除 '+excludedIndustries.size+' 類）';}
   updateSelection();if(activeView==='heatmap')drawHeatmap();
  };
