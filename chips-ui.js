@@ -29,7 +29,7 @@
   el('chipMore').hidden=rows.length<=limit;
   if(selectedStockCode&&!el('stockDetail').hidden){const stock=stocks.find(r=>r.code===selectedStockCode);if(stock)detail(stock);}
  }
- globalThis.renderChipDetail=detail;globalThis.refreshChips=draw;
+ globalThis.renderChipDetail=detail;globalThis.refreshChipViews=draw;
  el('chipRows').addEventListener('click',e=>{const b=e.target.closest('[data-chip-code]');if(b)openStock(b.dataset.chipCode);});
  el('chipSort').addEventListener('change',()=>{limit=50;draw();});el('chipMore').addEventListener('click',()=>{limit+=50;draw();});
  el('chipFilter').addEventListener('change',()=>{page=0;limit=50;compute();});
