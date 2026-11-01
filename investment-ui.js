@@ -15,7 +15,7 @@
  const save=(key,value)=>localStorage.setItem(key,JSON.stringify(value));
  const stock=()=>{const s=stocks.find(s=>s.code===$i('researchCode').value.trim());if(!s)throw Error('找不到股票，請確認資料已載入及代號正確。');return s;};
  const number=id=>{const raw=$i(id).value.trim();if(raw==='')throw Error('請填寫 '+$i(id).labels?.[0]?.textContent);const n=Number(raw);if(!Number.isFinite(n))throw Error('數字格式錯誤');return n;};
- const panel=(id,title,html)=>{const section=document.createElement('section');section.id=id;section.className='research-card investment-panel';section.hidden=true;section.innerHTML='<h2>'+title+'</h2>'+html;document.querySelector('main').append(section);return section;};
+ const panel=(id,title,html)=>{const section=document.createElement('section');section.id=id;section.className='research-card investment-panel';section.hidden=true;section.innerHTML='<h2>'+title+'</h2>'+html;const footer=document.querySelector('main footer');if(footer)footer.before(section);else document.querySelector('main').append(section);return section;};
  panel('advancedPanel','進階投資研究',`
  <p class="muted">法人歷史籌碼沿用「法人籌碼」與個股研究卡。財報由你匯入有來源、公開日及TTM期間的JSON；未匯入的欄位保持缺值。</p>
  <div class="controls"><label>股票代號<input id="researchCode" inputmode="numeric" value="2330" maxlength="7"></label><label>財務資料JSON<input id="financialImport" type="file" accept=".json,application/json"></label></div>
