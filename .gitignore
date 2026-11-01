@@ -36,3 +36,9 @@ service-account*.json
 *.tfvars
 *.tfvars.json
 !.example.tfvars
+
+# Node and local Worker state
+node_modules/
+.wrangler/
+.dev.vars
+.dev.vars.*

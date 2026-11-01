@@ -10,10 +10,12 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = (
+    'statements-model.js', 'statements-ui.js', 'data/statements.json',
+    'investment-model.js', 'investment-ui.js', 'investment.css',
     'index.html', 'research-model.js', 'research-ui.js', 'research.css',
     'chips-model.js', 'chips-ui.js', 'priority-model.js', 'scoring-model.js', 'app-data.js',
     'ios-app.js', 'ios-app.css', 'manifest.webmanifest', 'sw.js',
-    'data/stocks.json', 'data/chips.json',
+    'data/stocks.json', 'data/chips.json', 'data/financial-summary.json',
     'icons/icon.svg', 'icons/icon-180.png', 'icons/icon-192.png',
     'icons/icon-512.png', 'icons/icon-maskable-512.png',
 )
