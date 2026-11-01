@@ -1,0 +1,20 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+test('mode changes preserve body and navigation controls when body has data-view',()=>{
+ const classes=()=>({toggle(){}});
+ const body={dataset:{view:'screen'},classList:classes(),get textContent(){return '股票篩選'},set textContent(v){throw Error('Body must never be replaced')}};
+ const nav={dataset:{view:'screen'},textContent:'股票篩選'};
+ const buttons=['simple','expert'].map(uiMode=>({dataset:{uiMode},classList:classes(),setAttribute(){},addEventListener(_,fn){this.click=fn}}));
+ const intro={hidden:false};
+ const bar={classList:classes(),setAttribute(){},insertAdjacentElement(){},querySelectorAll(){return buttons}};
+ const header={parentNode:{insertBefore(){}}};
+ const title={dataset:{},textContent:'原始標題'};
+ let created=0;
+ const document={body,createElement(){return created++===0?bar:intro},getElementById(){return intro},querySelector(s){return s==='main header'?header:title},querySelectorAll(s){return s==='[data-ui-mode]'?buttons:s==='button[data-view]'?[nav]:s==='[data-view]'?[body,nav]:[]}};
+ vm.runInNewContext(fs.readFileSync('ui-mode.js','utf8'),{document,localStorage:{getItem(){return null},setItem(){}}});
+ assert.equal(nav.textContent,'找股票');assert.equal(intro.hidden,false);
+ buttons[1].click();assert.equal(nav.textContent,'股票篩選');assert.equal(intro.hidden,true);assert.equal(title.textContent,'原始標題');
+ buttons[0].click();assert.equal(nav.textContent,'找股票');assert.equal(body.dataset.view,'screen');
+});
