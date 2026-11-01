@@ -58,3 +58,11 @@ PWA 操作、iOS 專案、離線警示、無障礙、效能、安全標頭、Clo
 - CI 覆蓋的瀏覽器與裝置、歷史籌碼缺日情形。
 - 人氣與技術指標的合法資料來源、更新頻率及回測基準。
 - 公開 GitHub 儲存庫的機密掃描、資產白名單及依賴風險。
+
+## 2026-11-01 更新與驗證紀錄
+- PR #6：補強 metadata、股票列型態與交易日期驗證，異常輸入明確回報 ValueError；新增對應回歸案例。
+- PR #6 更新的本機驗證：Python unittest 56 項、Node 33 項全部通過，git diff --check 通過。Node 測試涵蓋策略 AND、產業排除、熱力圖預設排序及缺值置底；不等於真實 iPhone 瀏覽器驗收。
+- 更新前 PR #6 / #7 的 GitHub Quality gate 與 Secret scan 均成功；新提交的 CI 必須另外確認。
+- 兩個 PR 的 Cloudflare bot 皆回報預覽 Build Failed，未取得有效預覽網址；尚未取得 Cloudflare 建置日誌，不推定失敗原因。
+- PR #7 仍僅為規劃；50/25/15/10 完整評分、後續階段及手機驗收皆未因此完成。
+- 發布阻擋：預覽失敗、Cloudflare 正式部署觸發設定未驗證。保留 Draft，不合併、不正式部署。
