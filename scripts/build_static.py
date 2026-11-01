@@ -10,6 +10,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 ASSETS = (
+    'investment-model.js', 'investment-ui.js', 'investment.css',
     'index.html', 'research-model.js', 'research-ui.js', 'research.css',
     'chips-model.js', 'chips-ui.js', 'priority-model.js', 'scoring-model.js', 'app-data.js',
     'ios-app.js', 'ios-app.css', 'manifest.webmanifest', 'sw.js',
