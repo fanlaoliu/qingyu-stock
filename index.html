@@ -60,7 +60,7 @@ function setView(next){
  globalThis.refreshResearchTools?.();globalThis.refreshChipViews?.();
 }
 document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
-$('refreshData').addEventListener('click',init);const initialView=new URLSearchParams(location.search).get('view');if(['advanced','portfolio','assistant','backtest'].includes(initialView))activeView=initialView;else setView(Object.prototype.hasOwnProperty.call(sections,initialView)?initialView:'screen');
+$('refreshData').addEventListener('click',init);const initialView=new URLSearchParams(location.search).get('view');if(['advanced','portfolio','assistant','backtest','statements'].includes(initialView))activeView=initialView;else setView(Object.prototype.hasOwnProperty.call(sections,initialView)?initialView:'screen');
 function renderSourceStatus(){
  let box=$('sourceStatus');if(!box){box=document.createElement('div');box.id='sourceStatus';$('researchTools').append(box);}
  box.replaceChildren();const h=document.createElement('h3');h.textContent='每日官方盤後快照';box.append(h);
@@ -103,4 +103,4 @@ async function init(){
  }finally{refreshing=false;$('refreshData').disabled=false;$('refreshData').textContent='↻ 更新資料';}
 }
 init();
-</script><script src="/investment-model.js"></script><script src="/research-ui.js"></script><script src="/chips-ui.js"></script><script src="/app-data.js"></script><script src="/ios-app.js"></script><p id="backupPrivacy" class="muted">自選與筆記儲存在此裝置，備份 JSON 未加密。請勿記錄密碼、金鑰或其他機密；共用裝置使用後請清除網站資料。</p><script src="/investment-ui.js"></script></body></html>
+</script><script src="/investment-model.js"></script><script src="/research-ui.js"></script><script src="/chips-ui.js"></script><script src="/app-data.js"></script><script src="/ios-app.js"></script><p id="backupPrivacy" class="muted">自選與筆記儲存在此裝置，備份 JSON 未加密。請勿記錄密碼、金鑰或其他機密；共用裝置使用後請清除網站資料。</p><script src="/investment-ui.js"></script><script src="/statements-model.js"></script><script src="/statements-ui.js"></script></body></html>
