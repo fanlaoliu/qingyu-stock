@@ -4,7 +4,7 @@ const simpleLabels={'股票篩選':'找股票','指標熱力圖':'股票評分',
 const explanations={'本益比':'目前股價相對公司獲利的倍數','股價淨值比':'股價相對公司每股淨資產的倍數','殖利率':'過去配息相對股價的比例，不代表未來配息','月營收年增':'最近一個月生意比去年同月成長多少','ROE':'公司運用股東資本創造獲利的能力'};
 function mode(){try{return localStorage.getItem(KEY)==='expert'?'expert':'simple'}catch{return 'simple'}}
 function apply(value){const expert=value==='expert';document.body.classList.toggle('qingyu-simple',!expert);document.body.classList.toggle('qingyu-expert',expert);document.querySelectorAll('[data-ui-mode]').forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.uiMode===value));b.classList.toggle('active',b.dataset.uiMode===value)});
-document.querySelectorAll('[data-view]').forEach(b=>{if(!b.dataset.originalLabel)b.dataset.originalLabel=b.textContent;const original=b.dataset.originalLabel;const key=Object.keys(simpleLabels).find(k=>original.includes(k));if(key)b.textContent=expert?original:original.replace(key,simpleLabels[key])});
+document.querySelectorAll('button[data-view]').forEach(b=>{if(!b.dataset.originalLabel)b.dataset.originalLabel=b.textContent;const original=b.dataset.originalLabel;const key=Object.keys(simpleLabels).find(k=>original.includes(k));if(key)b.textContent=expert?original:original.replace(key,simpleLabels[key])});
 const title=document.querySelector('header h1');if(title){if(!title.dataset.originalTitle)title.dataset.originalTitle=title.textContent;title.textContent=expert?title.dataset.originalTitle:'用簡單的方法，找到值得研究的股票。'}
 const intro=document.getElementById('qingyu-simple-intro');if(intro)intro.hidden=expert;
 try{localStorage.setItem(KEY,value)}catch{}
