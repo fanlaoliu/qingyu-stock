@@ -2,6 +2,7 @@
 """Inspect coverage and freshness of the committed official market snapshot."""
 import datetime as dt
 import json
+import math
 import pathlib
 import sys
 
@@ -27,11 +28,25 @@ def analyze(payload, today=None):
         "source_errors": meta.get("errors", {}),
         "markets": {},
     }
+    seen = set()
+    duplicates = []
+    invalid_codes = []
+    for row in payload["stocks"]:
+        code = str(row.get("code", ""))
+        market = row.get("market")
+        if not code.isdigit() or not 4 <= len(code) <= 6 or market not in MARKETS:
+            invalid_codes.append({"code": code, "market": market})
+        key = (market, code)
+        if key in seen:
+            duplicates.append({"code": code, "market": market})
+        seen.add(key)
+    report["duplicates"] = duplicates
+    report["invalid_identifiers"] = invalid_codes
     for market in MARKETS:
         rows = [row for row in payload["stocks"] if row.get("market") == market]
         total = len(rows)
         counts = {field: sum(isinstance(row.get(field), (int, float)) and
-                             not isinstance(row.get(field), bool) for row in rows)
+                             not isinstance(row.get(field), bool) and math.isfinite(row.get(field)) for row in rows)
                   for field in FIELDS}
         report["markets"][market] = {
             "total": total,
