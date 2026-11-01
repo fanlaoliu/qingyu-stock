@@ -32,6 +32,32 @@
  function matches(r,id,now=Date.now()){const s=strategy(id);return !!s&&eligible(r,id,now)&&s.test(r);}
  function normalizeStrategies(values){return [...new Set((Array.isArray(values)?values:typeof values==='string'?[values]:[]).filter(id=>strategy(id)))];}
  function matchesAll(r,ids,now=Date.now()){return normalizeStrategies(ids).every(id=>matches(r,id,now));}
+ function diagnose(r,id,now=Date.now()){
+  const s=strategy(id),reasons=[];
+  if(!s)return {status:'unavailable',reasons:['未知策略']};
+  if(!r||typeof r!=='object')return {status:'unavailable',reasons:['找不到股票資料']};
+  if(!equity(r))reasons.push('此策略僅適用四位數普通股');
+  if(!finite(r.price)||r.price<=0)reasons.push('缺少有效收盤價');
+  if(!freshDate(r.date,now))reasons.push('行情日期無效、在未來或超過7日');
+  if(!r.valuationDate||r.valuationDate!==r.date)reasons.push('估值日期未提供或與行情不同日');
+  const labels={pe:'本益比',pb:'股價淨值比',yield:'殖利率',yoy:'月營收年增',cumulative:'累計營收年增'};
+  for(const key of s.fields)if(!finite(r[key]))reasons.push('缺少有效'+labels[key]);
+  if(s.revenue&&!freshRevenue(r,now))reasons.push('營收月份無效、在未來或超過100日');
+  if(reasons.length)return {status:'unavailable',reasons};
+  if(s.test(r))return {status:'pass',reasons:[]};
+  const rules={
+   growth:[[r.pe>0&&r.pe<=30,'本益比須大於0且不超過30'],[r.yoy>=10,'月營收年增須至少10%'],[r.cumulative>0,'累計營收年增須大於0%']],
+   value:[[r.pe>0&&r.pe<=15,'本益比須大於0且不超過15'],[r.pb>0&&r.pb<=1.5,'股價淨值比須大於0且不超過1.5'],[r.yoy>=0,'月營收年增須至少0%']],
+   income:[[r.pe>0&&r.pe<=30,'本益比須大於0且不超過30'],[r.yield>=4,'歷史殖利率須至少4%']],
+   expansion:[[r.pe>0&&r.pe<=50,'本益比須大於0且不超過50'],[r.yoy>=20,'月營收年增須至少20%'],[r.cumulative>=10,'累計營收年增須至少10%']]
+  };
+  return {status:'fail',reasons:rules[id].filter(([ok])=>!ok).map(([,reason])=>reason)};
+ }
+ function strategySummary(rows,id,now=Date.now()){
+  const counts={total:rows.length,pass:0,unavailable:0,fail:0};
+  for(const r of rows)counts[diagnose(r,id,now).status]++;
+  return counts;
+ }
  const metrics={
   yoy:{label:'月營收年增',unit:'%',min:-50,max:50,legend:['≤−50%','−25%','0%','+25%','≥+50%'],note:'藍色為負成長，琥珀色為正成長；不是股價漲跌幅。超出±50%以端點顏色顯示，數字保留原值。',period:'revenueMonth'},
   pe:{label:'本益比 PE',unit:'倍',min:0,max:60,legend:['0倍','15倍','30倍','45倍','≥60倍'],note:'顏色由淺到深表示倍數增加，超過60倍以端點顏色顯示；高低不等於好壞。',period:'valuationDate'},
@@ -56,5 +82,5 @@
   const order=raw.map((v,i)=>({i,fraction:v-values[i]})).sort((a,b)=>b.fraction-a.fraction||a.i-b.i);
   for(let i=0;i<remainder;i++)values[order[i%3].i]++;return values;
  }
- root.QingyuResearch=Object.freeze({finite,equity,industryKey,industryLabel,normalizeExclusions,included,strategies,strategy,eligible,matches,normalizeStrategies,matchesAll,metrics,color,allocations,allocate});
+ root.QingyuResearch=Object.freeze({finite,equity,industryKey,industryLabel,normalizeExclusions,included,strategies,strategy,eligible,matches,normalizeStrategies,matchesAll,diagnose,strategySummary,metrics,color,allocations,allocate});
 })(globalThis);
