@@ -10,6 +10,13 @@ spec.loader.exec_module(audit)
 
 
 class CoverageAuditTests(unittest.TestCase):
+    def test_malformed_metadata_rows_and_dates_are_rejected(self):
+        for meta, rows in [(None, []), ([], []), ({"mode": "official", "trade_date": None}, []),
+                           ({"mode": "official", "trade_date": "invalid"}, []),
+                           ({"mode": "official", "trade_date": "2026-10-30"}, [None])]:
+            with self.subTest(meta=meta, rows=rows), self.assertRaises(ValueError):
+                audit.analyze({"meta": meta, "stocks": rows})
+
     def test_market_coverage_and_age(self):
         payload = {"meta": {"mode": "official", "trade_date": "2026-10-30",
                             "errors": {}}, "stocks": [

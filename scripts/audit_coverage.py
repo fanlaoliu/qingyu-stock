@@ -2,6 +2,7 @@
 """Inspect coverage and freshness of the committed official market snapshot."""
 import datetime as dt
 import json
+import math
 import pathlib
 import sys
 
@@ -14,11 +15,18 @@ MARKETS = ("上市", "上櫃")
 def analyze(payload, today=None):
     if not isinstance(payload, dict) or not isinstance(payload.get("stocks"), list):
         raise ValueError("Expected snapshot with stocks array")
-    meta = payload.get("meta") or {}
+    meta = payload.get("meta")
+    if not isinstance(meta, dict):
+        raise ValueError("Expected snapshot metadata object")
+    if any(not isinstance(row, dict) for row in payload["stocks"]):
+        raise ValueError("Expected stock rows to be objects")
     if meta.get("mode") != "official":
         raise ValueError("Refusing to audit demo data as official")
     today = today or dt.datetime.now(dt.timezone(dt.timedelta(hours=8))).date()
-    trade_date = dt.date.fromisoformat(meta["trade_date"])
+    try:
+        trade_date = dt.date.fromisoformat(meta.get("trade_date"))
+    except (TypeError, ValueError) as exc:
+        raise ValueError("Expected valid ISO trade_date") from exc
     age = (today - trade_date).days
     report = {
         "trade_date": trade_date.isoformat(),
@@ -27,11 +35,25 @@ def analyze(payload, today=None):
         "source_errors": meta.get("errors", {}),
         "markets": {},
     }
+    seen = set()
+    duplicates = []
+    invalid_codes = []
+    for row in payload["stocks"]:
+        code = str(row.get("code", ""))
+        market = row.get("market")
+        if not code.isdigit() or not 4 <= len(code) <= 6 or market not in MARKETS:
+            invalid_codes.append({"code": code, "market": market})
+        key = (market, code)
+        if key in seen:
+            duplicates.append({"code": code, "market": market})
+        seen.add(key)
+    report["duplicates"] = duplicates
+    report["invalid_identifiers"] = invalid_codes
     for market in MARKETS:
         rows = [row for row in payload["stocks"] if row.get("market") == market]
         total = len(rows)
         counts = {field: sum(isinstance(row.get(field), (int, float)) and
-                             not isinstance(row.get(field), bool) for row in rows)
+                             not isinstance(row.get(field), bool) and math.isfinite(row.get(field)) for row in rows)
                   for field in FIELDS}
         report["markets"][market] = {
             "total": total,
