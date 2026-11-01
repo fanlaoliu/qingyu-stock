@@ -3,3 +3,12 @@
 .qingyu-mode-bar button:focus-visible,.qingyu-simple-intro summary:focus-visible{outline:3px solid #64e4cf;outline-offset:3px}
 .qingyu-simple-intro[hidden]{display:none}
 @media(max-width:600px){.qingyu-mode-bar button{flex:1;min-width:90px}.qingyu-simple input,.qingyu-simple select{font-size:16px}.qingyu-simple-intro{padding:14px}.qingyu-simple-intro h2{font-size:20px}}
+
+/* Progressive disclosure preserves input values and existing event handlers. */
+.qingyu-simple:not(.qingyu-show-advanced) .filters .controls>label:nth-child(n+3),
+.qingyu-simple:not(.qingyu-show-advanced) .filters .industry-exclusions,
+.qingyu-simple:not(.qingyu-show-advanced) #strategyTools>:not(label:last-child){display:none}
+.qingyu-simple .qingyu-advanced-toggle{margin-left:auto}
+.qingyu-simple .filters .controls{grid-template-columns:2fr 1fr}
+.qingyu-simple.qingyu-show-advanced .filters .controls{grid-template-columns:repeat(4,minmax(0,1fr))}
+@media(max-width:600px){.qingyu-simple .filters .controls,.qingyu-simple.qingyu-show-advanced .filters .controls{grid-template-columns:repeat(2,minmax(0,1fr))}.qingyu-simple .qingyu-advanced-toggle{flex-basis:100%;margin-left:0}}
