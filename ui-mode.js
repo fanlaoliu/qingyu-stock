@@ -7,11 +7,15 @@ function apply(value){const expert=value==='expert';document.body.classList.togg
 document.querySelectorAll('button[data-view]').forEach(b=>{if(!b.dataset.originalLabel)b.dataset.originalLabel=b.textContent;const original=b.dataset.originalLabel;const key=Object.keys(simpleLabels).find(k=>original.includes(k));if(key)b.textContent=expert?original:original.replace(key,simpleLabels[key])});
 const title=document.querySelector('header h1');if(title){if(!title.dataset.originalTitle)title.dataset.originalTitle=title.textContent;title.textContent=expert?title.dataset.originalTitle:'用簡單的方法，找到值得研究的股票。'}
 const intro=document.getElementById('qingyu-simple-intro');if(intro)intro.hidden=expert;
+if(advancedToggle)advancedToggle.hidden=expert;
 try{localStorage.setItem(KEY,value)}catch{}
 }
+let advancedToggle=null;
 const bar=document.createElement('div');bar.className='qingyu-mode-bar';bar.setAttribute('role','group');bar.setAttribute('aria-label','網站使用模式');bar.innerHTML='<span>閱讀模式</span><button type="button" data-ui-mode="simple">簡單版</button><button type="button" data-ui-mode="expert">專業版</button>';
 const header=document.querySelector('main header');if(!header)return;header.parentNode.insertBefore(bar,header);
-const intro=document.createElement('section');intro.id='qingyu-simple-intro';intro.className='qingyu-simple-intro';intro.innerHTML='<h2>第一次使用？從這裡開始</h2><p>① 搜尋股票名稱或代號　② 查看公司獲利與價格　③ 點開詳細分析再決定是否加入自選股。</p><p>本站使用盤後資料，不是即時報價；任何評分都不保證未來漲跌。</p><details><summary>看不懂財務名詞？點此查看白話解釋</summary><dl>'+Object.entries(explanations).map(([k,v])=>'<dt>'+k+'</dt><dd>'+v+'</dd>').join('')+'</dl></details>';
+const intro=document.createElement('section');intro.id='qingyu-simple-intro';intro.className='qingyu-simple-intro';intro.innerHTML='<h2>第一次使用？從這裡開始</h2><p>① 搜尋股票名稱或代號　② 查看公司獲利與價格　③ 點股票名稱查看分析，點星號加入自選股。</p><p>簡單版先顯示搜尋與市場；需要估值、營收或籌碼篩選時，按「展開進階條件」。收起條件仍會保留篩選結果；可按「重設條件」清除。</p><p>本站使用盤後資料，不是即時報價；任何評分都不保證未來漲跌。</p><details><summary>看不懂財務名詞？點此查看白話解釋</summary><dl>'+Object.entries(explanations).map(([k,v])=>'<dt>'+k+'</dt><dd>'+v+'</dd>').join('')+'</dl></details>';
 bar.insertAdjacentElement('afterend',intro);
-bar.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>apply(b.dataset.uiMode)));apply(mode());
+advancedToggle=document.createElement('button');advancedToggle.type='button';advancedToggle.className='qingyu-advanced-toggle';advancedToggle.textContent='展開進階條件';advancedToggle.setAttribute('aria-expanded','false');
+advancedToggle.addEventListener('click',()=>{const expanded=advancedToggle.getAttribute('aria-expanded')!=='true';advancedToggle.setAttribute('aria-expanded',String(expanded));advancedToggle.textContent=expanded?'收起進階條件':'展開進階條件';document.body.classList.toggle('qingyu-show-advanced',expanded)});
+bar.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>apply(b.dataset.uiMode)));bar.append(advancedToggle);apply(mode());
 })();
