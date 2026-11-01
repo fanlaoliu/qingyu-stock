@@ -2,6 +2,7 @@
   "name": "qingyu-stock",
   "compatibility_date": "2026-10-31",
   "build": { "command": "python3 scripts/build_static.py" },
+  "previews": {},
   "assets": {
     "directory": "./dist",
     "html_handling": "auto-trailing-slash",
