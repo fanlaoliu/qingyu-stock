@@ -71,3 +71,21 @@ python scripts/audit_cursor_sources.py /absolute/path/to/inert-cursor-plugins-sn
 本機回歸：Python 66 項（含 8 項新來源驗證測試）通過；Node 40 項通過；Python 編譯、22 個靜態資產建置通過。前一輪 GitHub CI 已通過 iOS 建置和 Secret Scan；本次提交的 CI 以 PR 最新執行結果為準。
 28 個來源檔案只放在暫存審查快照，沒有提交到專案或載入 Cursor。圖片仍不校驗、不渲染；來源 Commit 與 Blob ID 一致性不等於上游作者身分／簽章驗證，SHA-1 也不是獨立的供應鏈信任保證。
 npm registry 再次逾時，完整 npm 鎖定、MCP／Cursor 實機及瀏覽器 E2E 未完成。四個插件狀態不變，未啟用。沒有更動 CI 設定、main 或正式環境。
+
+## 2026-11-02：Thermos 唯讀衍生候選插件
+已實作 tooling/cursor/thermos-review-only，名稱 qingyu-thermos-review-only，版本 1.0.0-qingyu.1。這是依照固定來源審查概念重寫的獨立衍生插件，不是未修改的上游 Thermos，也不宣稱 Cursor 背書。
+包含 plugin.json、兩個 readonly:true Agents、原 MIT LICENSE 與 NOTICE，共 5 個檔案。沒有 MCP、npm、Skills、hooks、shell entrypoint 或自動載入設定。未指定模型以免暗中引入模型選擇或其他付費服務。
+
+代理只讀取父層提供的 diff／檔案摘錄，分別回報正確性／安全性與結構問題；缺少證據時要求摘錄。指令明訂不得編輯、執行專案命令、安裝、存取憑證、發布評論、提交、合併、部署或再啟動代理。此為文字政策與 client metadata，不是 OS 沙箱，也尚未證明能抵抗動態提示注入。
+
+準備封裝：
+```bash
+python scripts/package_cursor_review.py /absolute/path/to/new-review.zip
+```
+輸出位置的父目錄須已存在，檔案不得存在。只產生惰性 ZIP，不複製至使用者插件目錄、不建立 symlink、不修改個人 Skills，不連網、不啟動 Cursor。請勿在 Cursor 實機驗證前將其安裝或啟用。
+
+工具核對獨立的 thermos-review-only.integrity.json（SHA-256）；拒絕非預期檔案／hooks、漏檔、symlink、路徑穿越、內容不符及覆寫輸出。ZIP 具有固定條目順序與時間戳，兩次封裝位元組一致。該完整性清單與程式須一起接受程式碼審查；它不是作者簽章或防止整個儲存庫遭竄改的信任根。
+
+已在無第三方安裝／無注入正式憑證的暫存目錄執行封裝，ZIP CRC 檢查成功，5 個檔案；暫存封裝已清除。沒有啟動模型或 Cursor 代理，沒有冒稱動態測試通過。新增 7 項封裝測試，本機 Python 合計 73 項通過，Node 40 項通過；Python 編譯與 22 個公開資產建置通過。
+
+狀態：Thermos 的唯讀衍生版本已備妥並完成靜態／離線封裝驗證；上游插件與衍生版本仍未安裝／啟用，待無機密 Cursor client 實機驗證。GitHub 的帳號授權、Playwright／Agent Compatibility 的精確 npm 版本與依賴驗證仍未完成，未以衍生包代替這些檢查。

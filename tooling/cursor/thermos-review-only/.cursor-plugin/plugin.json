@@ -1,0 +1,11 @@
+{
+  "name": "qingyu-thermos-review-only",
+  "displayName": "Qingyu Thermos Review Only",
+  "version": "1.0.0-qingyu.1",
+  "description": "Explicit, read-only review agents for supplied diffs. No MCP, installation hooks or autonomous edits.",
+  "author": {
+    "name": "Qingyu Research"
+  },
+  "license": "MIT",
+  "agents": "./agents/"
+}
