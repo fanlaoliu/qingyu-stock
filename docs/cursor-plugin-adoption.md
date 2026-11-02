@@ -48,3 +48,26 @@ update-data.yml 只有 schedule/workflow_dispatch，contents:write；未手動�
 不要執行 upstream 的 npx 浮動版本命令，也不要使用 /add-plugin 自動取得未審版本。cursor-plugins.lock.json 中 activation_allowed=false；所有項目 blocked。現有安全規則仍有效，但規則文字並非權限 sandbox。
 取得可用 npm 存取與無機密的 Cursor 隔離測試環境後，先驗證套件精確版本、來源 commit、tarball SHA512、所有相依版本與授權，使用 ignore-scripts 安裝並檢查 lifecycle scripts，之後才按個別需求測試。需要帳號時另取得使用者確認，PAT 不得貼入 PR 或對話。
 正式啟用前須有測試證據更新本報告與清單；不能只把狀態改成 passed。main、合併與正式部署仍禁止。
+
+## 2026-11-02：可執行的離線來源驗證
+新增 scripts/audit_cursor_sources.py，使用 Python 標準庫，不下載、不安裝、不執行插件。輸入為另外準備的固定來源快照；不要放在 Cursor 自動載入目錄。
+
+操作：
+```bash
+python scripts/audit_cursor_sources.py /absolute/path/to/inert-cursor-plugins-snapshot
+```
+
+輸出為 JSON：檔案數、完整性錯誤、待審規則與行號。exit 0 僅代表清單中的文字檔 Git blob SHA 全部符合且無未審程式檔；exit 1 為完整性失敗；exit 2 為輸入／檔案讀取失敗。所有結果固定 activation_allowed=false，不能拿 exit 0 當安裝或執行授權。
+
+檢查包含：
+- 清單 schema、來源網址、Commit 格式、路徑安全、重複項目及必要 manifest/LICENSE。
+- 原始位元組的 Git blob SHA，包含換行差異。
+- 拒絕符號連結、遺漏檔案、超大文字檔、未列入清單的程式／hooks。
+- 只輸出待審檔案、行號與規則，不列出可能含憑證的原文。
+- 浮動版本、憑證介面、代理協作及擴大修改範圍提示；屬啟發式提醒，不是惡意程式或提示注入的完整偵測器。
+
+本次從固定上游 Commit 重新取得 28 個非圖片檔案，實際執行工具：28/28 SHA 相符、0 完整性錯誤。提示數：浮動版本 10、憑證介面 5、代理協作 6、修改範圍 2；提示可能來自重複文件，不能當漏洞筆數。
+
+本機回歸：Python 66 項（含 8 項新來源驗證測試）通過；Node 40 項通過；Python 編譯、22 個靜態資產建置通過。前一輪 GitHub CI 已通過 iOS 建置和 Secret Scan；本次提交的 CI 以 PR 最新執行結果為準。
+28 個來源檔案只放在暫存審查快照，沒有提交到專案或載入 Cursor。圖片仍不校驗、不渲染；來源 Commit 與 Blob ID 一致性不等於上游作者身分／簽章驗證，SHA-1 也不是獨立的供應鏈信任保證。
+npm registry 再次逾時，完整 npm 鎖定、MCP／Cursor 實機及瀏覽器 E2E 未完成。四個插件狀態不變，未啟用。沒有更動 CI 設定、main 或正式環境。
