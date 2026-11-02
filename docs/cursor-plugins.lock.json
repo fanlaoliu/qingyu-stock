@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "source_repository": "https://github.com/cursor/plugins",
+  "source_commit": "ae5650febf4320793844c12c4adaa937f417f8da", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret",
+  "activation_allowed": false,
+  "plugins": [
+    {
+      "name": "github",
+      "path": "third_party/github",
+      "status": "blocked-auth-and-remote-runtime",
+      "npm_version": null,
+      "reason": "PAT authorization required; remote server implementation cannot be pinned by wrapper commit; Cursor >=3.13.0 untested"
+    },
+    {
+      "name": "playwright",
+      "path": "third_party/playwright",
+      "status": "blocked-dependency-verification",
+      "npm_version": null,
+      "reason": "Upstream @latest prohibited; registry timed out; tarball, integrity, transitive dependencies and browser runtime unverified"
+    },
+    {
+      "name": "thermos",
+      "path": "thermos",
+      "status": "blocked-client-validation-and-write-scope",
+      "npm_version": null,
+      "reason": "No MCP/npm dependency in wrapper; optional take-the-wheel/FSD and ambitious edits require a review-only adaptation and Cursor runtime validation"
+    },
+    {
+      "name": "agent-compatibility",
+      "path": "agent-compatibility",
+      "status": "blocked-dependency-verification",
+      "npm_version": null,
+      "reason": "Upstream agent-compatibility@latest prohibited; registry timed out; package identity/integrity/dependency graph unverified"
+    }
+  ],
+  "files": [
+    {
+      "path": "agent-compatibility/.cursor-plugin/plugin.json",
+      "git_blob_sha": "a4c4aab1a6b42cd7641b7538b91290f916b70b07", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "agent-compatibility/CHANGELOG.md",
+      "git_blob_sha": "f726ed9a648666de20fe72e91e53fe644b41b0e7", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "agent-compatibility/LICENSE",
+      "git_blob_sha": "ca2bba771cd39dbef6acf96b52481133983451f3", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "agent-compatibility/README.md",
+      "git_blob_sha": "5dcd861dab4ece21f4b61b5fdbf880425a7538ed", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "agent-compatibility/agents/compatibility-scan-review.md",
+      "git_blob_sha": "97d2419f1cdecfc213a77b9e9dfcea78b7bc11d1", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "agent-compatibility/agents/docs-reliability-review.md",
+      "git_blob_sha": "f199aaafed88f749ad1fb444540877cdad13cc6c", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "agent-compatibility/agents/startup-review.md",
+      "git_blob_sha": "a6880ae658d962b20501b9fcde3b99f7b5de8938", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "agent-compatibility/agents/validation-review.md",
+      "git_blob_sha": "1630597e1a7c3e7fefeab110c1955dc3550098f3", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "agent-compatibility/skills/check-agent-compatibility/SKILL.md",
+      "git_blob_sha": "6d88d4a5f9e5a053f45c0321916e08460b3ce089", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "thermos/.cursor-plugin/plugin.json",
+      "git_blob_sha": "e1cb7cdea39a62d647f4e56b50da358d35c6c0f2", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "thermos/CHANGELOG.md",
+      "git_blob_sha": "89a95a63b36ddd78dc4f3767537c3d6b1da6c5fc", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "thermos/LICENSE",
+      "git_blob_sha": "ca2bba771cd39dbef6acf96b52481133983451f3", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "thermos/README.md",
+      "git_blob_sha": "77e950aebb603ab686abe100ec4bc9e8fe2a4990", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "thermos/agents/thermo-nuclear-code-quality-review-subagent.md",
+      "git_blob_sha": "08ccbaa97324cd0185b37315ab8cdcc380097c1a", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "thermos/agents/thermo-nuclear-review-subagent.md",
+      "git_blob_sha": "0253a283a4917122bb2f4888354558c348bf4d85", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "thermos/skills/thermo-nuclear-code-quality-review/SKILL.md",
+      "git_blob_sha": "ac76a2bc88bb2d895e83ab1788aa584a82346cfc", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "thermos/skills/thermo-nuclear-review/SKILL.md",
+      "git_blob_sha": "1aa5dfd03bc75bc9d0b250fa9a31826cb2a32cb4", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "thermos/skills/thermos/SKILL.md",
+      "git_blob_sha": "e7aeeafd1ed4200f4f6481136d3c3a92dc993011", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "third_party/github/.cursor-plugin/plugin.json",
+      "git_blob_sha": "caa4158ce3f8cdb321313c9f7e75cd539bcc5a40", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "third_party/github/CHANGELOG.md",
+      "git_blob_sha": "2d8967b5e72af0065f66b0cca52bfc574f89858d", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "third_party/github/LICENSE",
+      "git_blob_sha": "ca2bba771cd39dbef6acf96b52481133983451f3", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "third_party/github/README.md",
+      "git_blob_sha": "38628e92f9946db20c150f5d21b57f3513224082", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "third_party/github/mcp.json",
+      "git_blob_sha": "e2dafb8451e7b347b080d7485af1e5685f71d571", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "third_party/playwright/.cursor-plugin/plugin.json",
+      "git_blob_sha": "7bb37681aec80aeec8508bc8c228a8e6fcf4781a", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "third_party/playwright/CHANGELOG.md",
+      "git_blob_sha": "384e79eb8921b35da95b646ee3d4a7839dbb10ec", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "third_party/playwright/LICENSE",
+      "git_blob_sha": "ca2bba771cd39dbef6acf96b52481133983451f3", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "third_party/playwright/README.md",
+      "git_blob_sha": "c7e57ad9196f884316539ea28fb4f7e541ea2497", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    },
+    {
+      "path": "third_party/playwright/mcp.json",
+      "git_blob_sha": "20d3474374472c39d3a3e55dfcca08b52bd77be0", "_public_git_id_note": "Verified public upstream Git object ID; # pragma: allowlist secret"
+    }
+  ]
+}
