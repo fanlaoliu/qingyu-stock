@@ -39,3 +39,8 @@ test('screen cache refuses an alert calculated from a different price, date or m
  const good=evaluate(fixture()).valuationSignal;const ctx={C,signalMap:new Map([['上市:2330',good]])};vm.runInNewContext(text.slice(start,stop),ctx);const get=ctx.QingyuValuationSignals.get;
  assert.equal(get('2330','上市',{date:'2026-11-06',price:59.5}).kind,'buy-research');for(const quote of [{date:'2026-11-05',price:59.5},{date:'2026-11-06',price:60},{date:'2026-11-06',price:null}])assert.equal(get('2330','上市',quote).kind,'unavailable');assert.equal(get('2330','上櫃').kind,'unavailable');
 });
+test('missing stock after a dataset switch clears the preceding detail and buy signal',async()=>{
+ const fs=await import('node:fs');const vm=await import('node:vm');const text=fs.readFileSync('dual-engine/ui.js','utf8'),start=text.indexOf('function inspect(code)'),stop=text.indexOf('\nfunction evidence()',start);assert.ok(start>=0&&stop>start);
+ const nodes={dualStatus:{textContent:''},dualDetail:{hidden:false},dualPriceSignal:{textContent:'估值偏低，可研究買入'},dualContent:{textContent:'上一檔資料'}};const ctx={pack:{records:[]},current:{code:'2002'},currentRecord:{code:'2002'},$:id=>nodes[id]};vm.runInNewContext(text.slice(start,stop)+';inspect("9999");',ctx);
+ assert.equal(ctx.current,null);assert.equal(ctx.currentRecord,undefined);assert.equal(nodes.dualDetail.hidden,true);assert.equal(nodes.dualPriceSignal.textContent,'');assert.equal(nodes.dualContent.textContent,'');assert.match(nodes.dualStatus.textContent,/已清除/);
+});
