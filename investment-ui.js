@@ -48,7 +48,8 @@
  const views=[['advanced','advancedPanel','進階研究'],['portfolio','portfolioPanel','投資組合'],['assistant','assistantPanel','研究助理'],['backtest','backtestPanel','策略回測']];
  for(const [view,id,label] of views){sections[view]=[$i(id)];for(const nav of document.querySelectorAll('aside nav,.mobile-nav')){const b=document.createElement('button');b.type='button';b.className='nav';b.dataset.view=view;b.textContent=label;b.addEventListener('click',()=>setView(view));nav.append(b);}}
  const today=new Date(Date.now()+8*3600000).toISOString().slice(0,10);$i('tradeDate').value=today;
- try{const v=localStorage.getItem(KEY);if(v)book=M.ledger(JSON.parse(v));const f=localStorage.getItem(FKEY);if(f)financial=M.financials(JSON.parse(f));}catch(e){storageBroken=true;status('portfolioStatus','本機資料無法讀取；未覆寫原始資料：'+e.message);}
+ try{const v=localStorage.getItem(KEY);if(v)book=M.ledger(JSON.parse(v));}catch(e){storageBroken=true;status('portfolioStatus','本機資料無法讀取；未覆寫原始資料：'+e.message);}
+ try{const f=localStorage.getItem(FKEY);if(f)financial=M.financials(JSON.parse(f));}catch(e){status('advancedStatus','本機財報無法讀取；未覆寫原始資料：'+e.message);}
  function persist(next,restore=false){if(storageBroken&&!restore)throw Error('原始本機資料損壞，請先保留原始資料，再用有效帳本還原。');const validated=M.ledger(next);save(KEY,validated);book=validated;storageBroken=false;drawPortfolio();}
  function drawPortfolio(){
   const asOf=meta.trade_date||'',p=M.positions(book,stocks,asOf);
