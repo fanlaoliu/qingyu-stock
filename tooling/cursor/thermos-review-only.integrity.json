@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "files": [
+    {
+      "path": ".cursor-plugin/plugin.json",
+      "sha256": "a3de156604b93699fd9e52db4fc6d5180065c9372678c07a7528e2d8995f24cb", "note": "Public adapter content digest; # pragma: allowlist secret"
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "702f5f331b56aff0e33d8c7826df5202559f894145eb70355c6477b55b5bb8a0", "note": "Public adapter content digest; # pragma: allowlist secret"
+    },
+    {
+      "path": "NOTICE.md",
+      "sha256": "b481e694a87f6d732c1b0d7780f9c8d6dfec95d47f05b6b3438bade3a9718bff", "note": "Public adapter content digest; # pragma: allowlist secret"
+    },
+    {
+      "path": "agents/qingyu-correctness-review.md",
+      "sha256": "4205cf6c34c01148467dbff6edb2b048461f705a948b80392430566b181aad36", "note": "Public adapter content digest; # pragma: allowlist secret"
+    },
+    {
+      "path": "agents/qingyu-structure-review.md",
+      "sha256": "8a26f162d27dafead2fb802d1303f4d3738cbb334b8b698e1c4953fa5112a082", "note": "Public adapter content digest; # pragma: allowlist secret"
+    }
+  ]
+}

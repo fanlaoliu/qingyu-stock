@@ -65,3 +65,7 @@ node scripts/run_dual_research.mjs backtest history.json 2026-11-07 reports/back
 輸入須符合文件契約；上述日期只是示例。輸出包含原輸入與設定，可能含自備資料，因此 `reports/` 預設忽略、不打包網站。2015～2025真實績效與iPhone實機尚未驗證；此Draft不授權合併或正式部署。
 
 個股新增[估值偏高／偏低訊號](docs/VALUATION_SIGNALS.md)：偏低且通過完整研究門檻才標示「可研究買入」；資料不足、報價版本不一致或方法差異過大不發買入訊號。此功能仍屬Draft，未部署。
+
+### PR #1～#15整合版與Vercel發布
+
+[整合來源、衝突處理及驗收](docs/releases/ALL_PR_RELEASE.md)。執行 `python scripts/build_vercel.py` 可產生白名單發布檔與CSP安全標頭；需要先在Vercel開啟所有網址的登入保護。產物不含.env、測試、插件或個人匯入資料；行情仍是手動發布的盤後快照，不代表已完成每日同步。

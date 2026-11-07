@@ -86,7 +86,7 @@ function acceptPayload(payload){
   $('mode').textContent=old?'快照資料較舊':meta.fallback?'盤後資料 · 部分備援':'官方盤後資料';
   $('stamp').textContent='快照更新 '+(meta.updated_at||'未提供');
   $('notice').className='notice'+(old||meta.fallback?' warning':'');
-  $('notice').textContent='收盤日期 '+meta.trade_date+'｜'+(meta.fallback?'部分來源未能更新，對應欄位保留 '+(meta.fallback_source||'內附官方資料快照')+'（快照日期 '+(meta.snapshot_trade_date||meta.trade_date)+'）。':'本次官方來源已讀取。')+' 估值與營收有各自期間；請開啟個股研究卡核對。'+(old?'資料已超過7日，暫停產生成長價值候選。':'')+' 非即時行情；每日盤後更新，手動更新僅重新讀取最新快照。';
+  $('notice').textContent='收盤日期 '+meta.trade_date+'｜'+(meta.fallback?'部分來源未能更新，對應欄位保留 '+(meta.fallback_source||'內附官方資料快照')+'（快照日期 '+(meta.snapshot_trade_date||meta.trade_date)+'）。':'本次官方來源已讀取。')+' 估值與營收有各自期間；請開啟個股研究卡核對。'+(old?'資料已超過7日，暫停產生成長價值候選。':'')+' 非即時行情；手動更新僅重新讀取目前已發布的盤後快照，請核對交易日期。';
   updateCoverage();renderSourceStatus();compute();
   if(selectedStockCode&&!$('stockDetail').hidden){const stock=stocks.find(x=>x.code===selectedStockCode);if(stock){showDetailQuality(stock);enrichDetail(stock);globalThis.renderChipDetail?.(stock);}}
 }
