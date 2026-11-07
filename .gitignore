@@ -36,3 +36,20 @@ service-account*.json
 *.tfvars
 *.tfvars.json
 !.example.tfvars
+
+# Node and local Worker state
+node_modules/
+.wrangler/
+.dev.vars
+.dev.vars.*
+
+# Local research imports, QA manifests and reports (never public assets)
+.local*/
+reports/
+.openai/hosting.json
+*.log
+.dev.vars*
+*password*
+.envrc
+.ssh/
+.aws/
