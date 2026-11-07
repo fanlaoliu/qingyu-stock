@@ -51,3 +51,7 @@
 發布至既有JackFan團隊的`qingyu-stock`專案。先確認Vercel Authentication涵蓋all，再上傳白名單產物、等待READY、比對37檔摘要並重新確認保護。網址維持 https://qingyu-stock-jack-fan.vercel.app 。不建立分享繞過連結、不公開、不新增外部觀看者；GitHub仍保留Draft供審查。
 
 安全檢查：141個目前非忽略檔案、285個所有可達Git歷史blob之常見私鑰／GitHub／OpenAI／AWS金鑰格式0命中。這是模式檢查，不保證識別所有任意格式機密；疑似外洩仍須停止與輪替，不顯示值。
+
+機密掃描處理：首次Secret scan將JSON清單中15個公開PR提交編號識別為高熵字串。逐筆與GitHub原始PR head核對完全相符後，改以可點閱的完整GitHub commit_url記錄同一來源；完整提交編號仍保留於連結與本文件表格。沒有修改掃描設定、降低閾值、加入忽略規則或跳過檢查。
+
+修正後以CI相同的detect-secrets 1.5.0與預設規則掃描：0筆警示；未調整掃描或基線。
