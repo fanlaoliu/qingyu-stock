@@ -50,3 +50,22 @@ Node 22或以上；以 HTTP 開啟根目錄。GitHub Quality gate 包含 Python�
 ### Cloudflare 正式部署
 
 `wrangler.jsonc` 綁定既有 `qingyu-stock` Worker。Wrangler 執行 `python3 scripts/build_static.py` 產生 `dist/`，只包含明確允許的網站資產、官方快照、快取標頭與雜湊清單 `deployment.json`。原始碼、iOS 專案、測試、工作流程及其他儲存庫檔案不會打包上站。使用既有 Workers Builds 的部署命令 `npx wrangler deploy`；分支預覽可用 `npx wrangler versions upload`。不需要將整個儲存庫根目錄設定為公開資產目錄。
+
+### 雙專家智慧選股引擎 V1.0（Draft，未發布）
+
+開啟 `?view=dual` 使用六構面量化評分、三情境多法估值、數學定義技術訊號、三輪規則化交叉檢查、風險試算及PIT回測。既有行情不等於完整研究資料：沒有合法且可核對的三年／TTM／長期歷史時，不給完整分數、不湊五檔。真正AI預設關閉，規則化審查不假冒AI。
+
+[分階段驗收、資料契約、全部公式與限制](docs/DUAL_ENGINE_V1.md)。離線重現：
+
+```sh
+node scripts/run_dual_research.mjs research input.json 2026-11-07 reports/research.json
+node scripts/run_dual_research.mjs backtest history.json 2026-11-07 reports/backtest.json
+```
+
+輸入須符合文件契約；上述日期只是示例。輸出包含原輸入與設定，可能含自備資料，因此 `reports/` 預設忽略、不打包網站。2015～2025真實績效與iPhone實機尚未驗證；此Draft不授權合併或正式部署。
+
+個股新增[估值偏高／偏低訊號](docs/VALUATION_SIGNALS.md)：偏低且通過完整研究門檻才標示「可研究買入」；資料不足、報價版本不一致或方法差異過大不發買入訊號。此功能仍屬Draft，未部署。
+
+### PR #1～#15整合版與Vercel發布
+
+[整合來源、衝突處理及驗收](docs/releases/ALL_PR_RELEASE.md)。執行 `python scripts/build_vercel.py` 可產生白名單發布檔與CSP安全標頭；需要先在Vercel開啟所有網址的登入保護。產物不含.env、測試、插件或個人匯入資料；行情仍是手動發布的盤後快照，不代表已完成每日同步。
