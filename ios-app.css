@@ -18,7 +18,7 @@
  header .status{display:flex;align-items:center;flex-wrap:wrap;gap:7px;padding:9px 12px;font-size:11px}
  header .status small{display:none}header .status #refreshData{width:auto;margin:0 0 0 auto;padding:7px 10px;min-height:36px;font-size:11px}header .status #appOpenGuide{display:none}
  body:not([data-view=screen]) .kpis{display:none}body[data-view=app] #notice,body[data-view=app] header .status{display:none}
- .mobile-nav{display:none!important}
+ .mobile-nav{display:flex}
  .ios-tabbar{position:fixed;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));left:0;right:0;bottom:0;z-index:30;background:#0c2231f5;backdrop-filter:blur(16px);border-top:1px solid #2b4d5b;padding:6px max(5px,env(safe-area-inset-right)) calc(7px + env(safe-area-inset-bottom)) max(5px,env(safe-area-inset-left));box-shadow:0 -8px 30px #0003}
  .ios-tabbar button{min-height:48px;border:0;background:transparent;border-radius:8px;color:#8faebb;font-size:10px;line-height:1.6;padding:3px 1px;white-space:nowrap}
  .ios-tabbar button span{display:block;font-size:21px;line-height:1.2;margin-bottom:3px}
