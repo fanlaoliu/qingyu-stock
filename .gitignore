@@ -36,3 +36,37 @@ service-account*.json
 *.tfvars
 *.tfvars.json
 !.example.tfvars
+
+# Runtime logs and debug output
+*.log
+*.log.*
+logs/
+log/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Additional local secrets and credentials
+.envrc
+.envrc.local
+*.secret
+*.secrets
+*.secret.json
+*.credentials.json
+*.credentials
+*.token
+*.tokens
+*.kubeconfig
+.kube/
+.aws/
+.gcloud/
+.azure/
+.npmrc
+.pypirc
+.netrc
+*.sqlite
+*.sqlite3
+*.db
+!.env.example
+!.env.*.example
